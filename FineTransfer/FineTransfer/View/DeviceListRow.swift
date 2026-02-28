@@ -1,0 +1,30 @@
+//
+//  DeviceListRow.swift
+//  FineTransfer
+//
+//  Created by Tzu-Yi Lin on 2026/2/28.
+//
+
+import SwiftUI
+
+
+struct DeviceListRow: View {
+
+    let device: MTPDevice
+
+    var body: some View {
+        HStack {
+
+            Image(systemName: "externaldrive")
+
+            VStack(alignment: .leading) {
+                if let manufacturer = device.manufacturer {
+                    Text(manufacturer)
+                }
+                if let displayName = device.displayName {
+                    Text(displayName)
+                }
+            }
+        }
+    }
+}
