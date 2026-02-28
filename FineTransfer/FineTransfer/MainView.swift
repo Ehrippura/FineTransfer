@@ -19,7 +19,7 @@ struct MainView: View {
                 .environment(model)
         } detail: {
             if let device = model.selectedDevice {
-                DeviceDetailView(device: device)
+                FileView(device: device)
             } else {
                 Text("Select a device")
             }

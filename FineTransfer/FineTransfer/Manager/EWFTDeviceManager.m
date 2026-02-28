@@ -9,8 +9,6 @@
 #import "EWFTDevice+Private.h"
 #import <MTP/MTP.h>
 
-NSErrorDomain const EWFTDeviceManagerMTPErrorDomain = @"EWFTDeviceManagerMTPErrorDomain";
-
 @interface EWFTDeviceManager()
 - (instancetype)_init NS_DESIGNATED_INITIALIZER;
 @end
@@ -46,7 +44,7 @@ NSErrorDomain const EWFTDeviceManagerMTPErrorDomain = @"EWFTDeviceManagerMTPErro
 
     if (err != LIBMTP_ERROR_NONE) {
         if (error) {
-            *error = [NSError errorWithDomain:EWFTDeviceManagerMTPErrorDomain
+            *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                          code:(NSInteger)err
                                      userInfo:@{NSLocalizedDescriptionKey: @"Failed to detect MTP devices."}];
         }

@@ -7,22 +7,9 @@
 
 #import <Foundation/Foundation.h>
 #import "EWFTDevice.h"
+#import "EWFTMTPError.h"
 
 NS_ASSUME_NONNULL_BEGIN
-
-extern NSErrorDomain const EWFTDeviceManagerMTPErrorDomain;
-
-typedef NS_ERROR_ENUM(EWFTDeviceManagerMTPErrorDomain, EWFTDeviceManagerMTPError) {
-    EWFTDeviceManagerMTPErrorNone               = 0,
-    EWFTDeviceManagerMTPErrorGeneral            = 1,
-    EWFTDeviceManagerMTPErrorPTPLayer           = 2,
-    EWFTDeviceManagerMTPErrorUSBLayer           = 3,
-    EWFTDeviceManagerMTPErrorMemoryAllocation   = 4,
-    EWFTDeviceManagerMTPErrorNoDeviceAttached   = 5,
-    EWFTDeviceManagerMTPErrorStorageFull        = 6,
-    EWFTDeviceManagerMTPErrorConnecting         = 7,
-    EWFTDeviceManagerMTPErrorCancelled          = 8,
-};
 
 NS_SWIFT_NAME(DeviceManager)
 @interface EWFTDeviceManager : NSObject
