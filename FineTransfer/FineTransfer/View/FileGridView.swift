@@ -15,6 +15,7 @@ struct FileGridView: NSViewRepresentable {
     var files: [MTPFileItem]
     fileprivate var onItemDoubleClick: ((MTPFileItem) -> Void)?
     fileprivate var onDownload: (([MTPFileItem]) -> Void)?
+    fileprivate var onDelete: (([MTPFileItem]) -> Void)?
     fileprivate var onUpload: (() -> Void)?
 
     init(files: [MTPFileItem]) {
@@ -22,7 +23,7 @@ struct FileGridView: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onUpload: onUpload)
+        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onDelete: onDelete, onUpload: onUpload)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -66,6 +67,7 @@ struct FileGridView: NSViewRepresentable {
         context.coordinator.files = files
         context.coordinator.onItemDoubleClick = onItemDoubleClick
         context.coordinator.onDownload = onDownload
+        context.coordinator.onDelete = onDelete
         context.coordinator.onUpload = onUpload
         if let collectionView = scrollView.documentView as? NSCollectionView {
             collectionView.reloadData()
@@ -89,6 +91,12 @@ extension FileGridView {
         return copy
     }
 
+    func onDelete(perform action: @escaping ([MTPFileItem]) -> Void) -> FileGridView {
+        var copy = self
+        copy.onDelete = action
+        return copy
+    }
+
     func onUpload(perform action: @escaping () -> Void) -> FileGridView {
         var copy = self
         copy.onUpload = action
@@ -105,13 +113,15 @@ extension FileGridView {
         var files: [MTPFileItem]
         var onItemDoubleClick: ((MTPFileItem) -> Void)?
         var onDownload: (([MTPFileItem]) -> Void)?
+        var onDelete: (([MTPFileItem]) -> Void)?
         var onUpload: (() -> Void)?
         fileprivate weak var collectionView: FileCollectionView?
 
-        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?, onUpload: (() -> Void)?) {
+        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?, onDelete: (([MTPFileItem]) -> Void)?, onUpload: (() -> Void)?) {
             self.files = files
             self.onItemDoubleClick = onItemDoubleClick
             self.onDownload = onDownload
+            self.onDelete = onDelete
             self.onUpload = onUpload
         }
 
@@ -161,11 +171,27 @@ extension FileGridView {
             )
             downloadItem.target = self
             menu.addItem(downloadItem)
+
+            if onDelete != nil {
+                menu.addItem(.separator())
+                let deleteItem = NSMenuItem(
+                    title: NSLocalizedString("Delete", comment: "Context menu: delete selected items"),
+                    action: #selector(deleteMenuItemClicked),
+                    keyEquivalent: ""
+                )
+                deleteItem.target = self
+                menu.addItem(deleteItem)
+            }
+
             return menu
         }
 
         @objc private func downloadMenuItemClicked() {
             onDownload?(menuTargetFiles)
+        }
+
+        @objc private func deleteMenuItemClicked() {
+            onDelete?(menuTargetFiles)
         }
 
         func buildEmptySpaceContextMenu() -> NSMenu? {

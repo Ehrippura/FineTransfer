@@ -84,8 +84,8 @@ NS_SWIFT_NAME(MTPDevice)
  */
 - (NSProgress *)downloadFileWithID:(uint32_t)fileID
                      toDestination:(NSURL *)destinationURL
-               completionHandler:(void (^)(NSError * _Nullable error))completionHandler
-    NS_SWIFT_NAME(downloadFile(id:to:completionHandler:));
+                 completionHandler:(void (^)(NSError * _Nullable error))completionHandler
+NS_SWIFT_NAME(downloadFile(id:to:completionHandler:));
 
 /**
  * Uploads a local file to the MTP device.
@@ -106,6 +106,20 @@ NS_SWIFT_NAME(MTPDevice)
                            storageID:(uint32_t)storageID
                    completionHandler:(void (^)(NSError * _Nullable error))completionHandler
     NS_SWIFT_NAME(uploadFile(from:toFolderID:storageID:completionHandler:));
+
+/**
+ * Deletes an object (file or folder) from the MTP device.
+ *
+ * Executes on the device's internal serial MTP queue and delivers the result
+ * on the main queue via completionHandler.
+ *
+ * @param objectID           The MTP object ID of the item to delete.
+ * @param completionHandler  Called on the main queue when the operation finishes.
+ *                           error is nil on success.
+ */
+- (void)deleteObjectWithID:(uint32_t)objectID
+         completionHandler:(void (^)(NSError * _Nullable error))completionHandler
+    NS_SWIFT_ASYNC_NAME(deleteObject(id:));
 
 @end
 

@@ -33,6 +33,9 @@ struct FileView: View {
             .onUpload {
                 uploadFiles()
             }
+            .onDelete { filesToDelete in
+                deleteFiles(filesToDelete)
+            }
             .onAppear {
                 loadFiles()
             }
@@ -182,6 +185,41 @@ struct FileView: View {
                 }
             }
             downloadState = nil
+        }
+    }
+
+    private func deleteFiles(_ filesToDelete: [MTPFileItem]) {
+
+        guard let device else {
+            return
+        }
+
+        let alert = NSAlert()
+        if filesToDelete.count == 1 {
+            let name = filesToDelete[0].filename ?? NSLocalizedString("file", comment: "Generic file noun")
+            alert.messageText = String(format: NSLocalizedString("Delete \"%@\"?", comment: "Delete single item confirmation title"), name)
+        } else {
+            alert.messageText = String(format: NSLocalizedString("Delete %d items?", comment: "Delete multiple items confirmation title"), filesToDelete.count)
+        }
+        alert.informativeText = NSLocalizedString("This action cannot be undone.", comment: "Delete confirmation detail")
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: NSLocalizedString("Delete", comment: "Delete confirmation button"))
+        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "Cancel button"))
+
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            return
+        }
+
+        Task {
+            for file in filesToDelete {
+                do {
+                    try await device.deleteObject(id: file.itemID)
+                } catch {
+                    NSAlert(error: error).runModal()
+                    break
+                }
+            }
+            loadFiles()
         }
     }
 
