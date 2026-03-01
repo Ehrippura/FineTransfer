@@ -15,6 +15,9 @@ struct FileView: View {
 
     var body: some View {
         FileGridView(files: files)
+            .onDoubleClick { item in
+                print("double click item: \(item)")
+            }
             .onAppear {
                 loadFiles()
             }

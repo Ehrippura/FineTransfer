@@ -14,9 +14,14 @@ import UniformTypeIdentifiers
 struct FileGridView: NSViewRepresentable {
 
     var files: [MTPFileItem]
+    fileprivate var onItemDoubleClick: ((MTPFileItem) -> Void)?
+
+    init(files: [MTPFileItem]) {
+        self.files = files
+    }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(files: files)
+        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -39,6 +44,14 @@ struct FileGridView: NSViewRepresentable {
         collectionView.delegate = context.coordinator
         context.coordinator.collectionView = collectionView
 
+        let doubleClickGesture = NSClickGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleDoubleClick(_:))
+        )
+        doubleClickGesture.numberOfClicksRequired = 2
+        doubleClickGesture.delaysPrimaryMouseButtonEvents = false
+        collectionView.addGestureRecognizer(doubleClickGesture)
+
         let scrollView = NSScrollView()
         scrollView.documentView = collectionView
         scrollView.hasVerticalScroller = true
@@ -49,9 +62,21 @@ struct FileGridView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.files = files
+        context.coordinator.onItemDoubleClick = onItemDoubleClick
         if let collectionView = scrollView.documentView as? NSCollectionView {
             collectionView.reloadData()
         }
+    }
+}
+
+// MARK: - Modifiers
+
+extension FileGridView {
+
+    func onDoubleClick(perform action: @escaping (MTPFileItem) -> Void) -> FileGridView {
+        var copy = self
+        copy.onItemDoubleClick = action
+        return copy
     }
 }
 
@@ -62,10 +87,12 @@ extension FileGridView {
     class Coordinator: NSObject, NSCollectionViewDataSource, NSCollectionViewDelegateFlowLayout {
 
         var files: [MTPFileItem]
+        var onItemDoubleClick: ((MTPFileItem) -> Void)?
         weak var collectionView: NSCollectionView?
 
-        init(files: [MTPFileItem]) {
+        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?) {
             self.files = files
+            self.onItemDoubleClick = onItemDoubleClick
         }
 
         // MARK: NSCollectionViewDataSource
@@ -82,6 +109,17 @@ extension FileGridView {
             let file = files[indexPath.item]
             item.configure(with: file)
             return item
+        }
+
+        // MARK: Double Click
+
+        @objc func handleDoubleClick(_ sender: NSClickGestureRecognizer) {
+            guard let collectionView = collectionView else { return }
+            let point = sender.location(in: collectionView)
+            guard let indexPath = collectionView.indexPathForItem(at: point),
+                  indexPath.item < files.count else { return }
+            let file = files[indexPath.item]
+            onItemDoubleClick?(file)
         }
     }
 }
