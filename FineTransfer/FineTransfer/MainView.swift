@@ -21,7 +21,13 @@ struct MainView: View {
             if let device = model.selectedDevice {
                 FileView(device: device)
             } else {
-                Text("Select a device")
+                /// 在沒有裝置選擇的時候，使用 placeholder ScrollView 來消除 NavigationBar separator line
+                ScrollView {
+
+                }
+                .overlay {
+                    Text("Please select a device.")
+                }
             }
         }
         .onAppear {
