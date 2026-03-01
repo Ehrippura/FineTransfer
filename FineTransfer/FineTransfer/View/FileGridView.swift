@@ -19,7 +19,12 @@ struct FileGridView: NSViewRepresentable {
     fileprivate var onUpload: (() -> Void)?
 
     init(files: [MTPFileItem]) {
-        self.files = files
+        self.files = files.sorted { lhs, rhs in
+            if lhs.isFolder != rhs.isFolder {
+                return lhs.isFolder
+            }
+            return (lhs.filename ?? "").localizedStandardCompare(rhs.filename ?? "") == .orderedAscending
+        }
     }
 
     func makeCoordinator() -> Coordinator {
