@@ -14,8 +14,18 @@ uint32_t const EWFDeviceRootFolderID = LIBMTP_FILES_AND_FOLDERS_ROOT;
 
 @interface EWFTDevice() {
     LIBMTP_mtpdevice_t *_mtp_device_handle;
+    dispatch_queue_t _mtpQueue;
 }
 @end
+
+// C callback invoked by libmtp during LIBMTP_Get_File_To_File — runs on _mtpQueue.
+// Returns 1 to abort the transfer when the caller cancels the NSProgress object.
+static int EWFTDownloadProgressCallback(uint64_t sent, uint64_t total, void const * const data) {
+    NSProgress *progress = (__bridge NSProgress *)data;
+    progress.totalUnitCount = (int64_t)total;
+    progress.completedUnitCount = (int64_t)sent;
+    return progress.isCancelled ? 1 : 0;
+}
 
 @implementation EWFTDevice
 
@@ -23,6 +33,7 @@ uint32_t const EWFDeviceRootFolderID = LIBMTP_FILES_AND_FOLDERS_ROOT;
     self = [super init];
     if (self) {
         _mtp_device_handle = device;
+        _mtpQueue = dispatch_queue_create("com.ewft.device.mtp", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -121,6 +132,53 @@ uint32_t const EWFDeviceRootFolderID = LIBMTP_FILES_AND_FOLDERS_ROOT;
     }
 
     return [result copy];
+}
+
+- (NSProgress *)downloadFileWithID:(uint32_t)fileID
+                     toDestination:(NSURL *)destinationURL
+               completionHandler:(void (^)(NSError * _Nullable error))completionHandler {
+    NSProgress *progress = [NSProgress progressWithTotalUnitCount:-1];
+
+    dispatch_async(_mtpQueue, ^{
+        if (!self->_mtp_device_handle) {
+            NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                 code:EWFTMTPErrorGeneral
+                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+            dispatch_async(dispatch_get_main_queue(), ^{ completionHandler(error); });
+            return;
+        }
+
+        LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+
+        int result = LIBMTP_Get_File_To_File(self->_mtp_device_handle,
+                                             fileID,
+                                             destinationURL.fileSystemRepresentation,
+                                             EWFTDownloadProgressCallback,
+                                             (__bridge void *)progress);
+
+        NSError *completionError = nil;
+        if (result != 0) {
+            if (progress.isCancelled) {
+                completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                      code:EWFTMTPErrorCancelled
+                                                  userInfo:@{NSLocalizedDescriptionKey: @"Download was cancelled."}];
+                [[NSFileManager defaultManager] removeItemAtURL:destinationURL error:nil];
+            } else {
+                LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
+                NSString *msg = (errstack && errstack->error_text)
+                    ? [NSString stringWithUTF8String:errstack->error_text]
+                    : @"Failed to download file.";
+                completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                      code:errstack->errornumber
+                                                  userInfo:@{NSLocalizedDescriptionKey: msg}];
+                LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+            }
+        }
+
+        completionHandler(completionError);
+    });
+
+    return progress;
 }
 
 - (NSString *)description {
