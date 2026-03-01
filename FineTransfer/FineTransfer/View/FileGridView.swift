@@ -14,13 +14,14 @@ struct FileGridView: NSViewRepresentable {
 
     var files: [MTPFileItem]
     fileprivate var onItemDoubleClick: ((MTPFileItem) -> Void)?
+    fileprivate var onDownload: (([MTPFileItem]) -> Void)?
 
     init(files: [MTPFileItem]) {
         self.files = files
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick)
+        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -30,7 +31,7 @@ struct FileGridView: NSViewRepresentable {
         layout.minimumLineSpacing = 8
         layout.sectionInset = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
 
-        let collectionView = NSCollectionView()
+        let collectionView = FileCollectionView()
         collectionView.collectionViewLayout = layout
         collectionView.isSelectable = true
         collectionView.allowsMultipleSelection = true
@@ -41,6 +42,7 @@ struct FileGridView: NSViewRepresentable {
 
         collectionView.dataSource = context.coordinator
         collectionView.delegate = context.coordinator
+        collectionView.coordinator = context.coordinator
         context.coordinator.collectionView = collectionView
 
         let doubleClickGesture = NSClickGestureRecognizer(
@@ -62,6 +64,7 @@ struct FileGridView: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.files = files
         context.coordinator.onItemDoubleClick = onItemDoubleClick
+        context.coordinator.onDownload = onDownload
         if let collectionView = scrollView.documentView as? NSCollectionView {
             collectionView.reloadData()
         }
@@ -77,6 +80,12 @@ extension FileGridView {
         copy.onItemDoubleClick = action
         return copy
     }
+
+    func onDownload(perform action: @escaping ([MTPFileItem]) -> Void) -> FileGridView {
+        var copy = self
+        copy.onDownload = action
+        return copy
+    }
 }
 
 // MARK: - Coordinator
@@ -87,11 +96,13 @@ extension FileGridView {
 
         var files: [MTPFileItem]
         var onItemDoubleClick: ((MTPFileItem) -> Void)?
-        weak var collectionView: NSCollectionView?
+        var onDownload: (([MTPFileItem]) -> Void)?
+        fileprivate weak var collectionView: FileCollectionView?
 
-        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?) {
+        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?) {
             self.files = files
             self.onItemDoubleClick = onItemDoubleClick
+            self.onDownload = onDownload
         }
 
         // MARK: NSCollectionViewDataSource
@@ -110,16 +121,78 @@ extension FileGridView {
             return item
         }
 
+        // MARK: Context Menu
+
+        private var menuTargetFiles: [MTPFileItem] = []
+
+        func buildContextMenu() -> NSMenu? {
+            guard let collectionView else {
+                return nil
+            }
+
+            let items = collectionView.selectionIndexPaths.compactMap { ip -> MTPFileItem? in
+                guard ip.item < files.count else {
+                    return nil
+                }
+                return files[ip.item]
+            }
+
+            guard !items.isEmpty else {
+                return nil
+            }
+
+            menuTargetFiles = items
+
+            let menu = NSMenu()
+            let downloadItem = NSMenuItem(
+                title: NSLocalizedString("Download", comment: "Context menu: download selected items"),
+                action: #selector(downloadMenuItemClicked),
+                keyEquivalent: ""
+            )
+            downloadItem.target = self
+            menu.addItem(downloadItem)
+            return menu
+        }
+
+        @objc private func downloadMenuItemClicked() {
+            onDownload?(menuTargetFiles)
+        }
+
         // MARK: Double Click
 
         @objc func handleDoubleClick(_ sender: NSClickGestureRecognizer) {
-            guard let collectionView = collectionView else { return }
+            guard let collectionView = collectionView else {
+                return
+            }
             let point = sender.location(in: collectionView)
             guard let indexPath = collectionView.indexPathForItem(at: point),
-                  indexPath.item < files.count else { return }
+                  indexPath.item < files.count else {
+                return
+            }
             let file = files[indexPath.item]
             onItemDoubleClick?(file)
         }
+    }
+}
+
+// MARK: - FileCollectionView
+
+private class FileCollectionView: NSCollectionView {
+
+    weak var coordinator: FileGridView.Coordinator?
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let point = convert(event.locationInWindow, from: nil)
+        guard let indexPath = indexPathForItem(at: point) else {
+            return nil
+        }
+
+        // Right-click on an unselected item: select only that item
+        if !selectionIndexPaths.contains(indexPath) {
+            selectionIndexPaths = [indexPath]
+        }
+
+        return coordinator?.buildContextMenu()
     }
 }
 

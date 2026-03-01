@@ -17,6 +17,8 @@ struct FileView: View {
     @State private var backStack: [UInt32] = []
     @State private var forwardStack: [UInt32] = []
 
+    @State private var downloadState: DownloadState?
+
     var body: some View {
         FileGridView(files: files)
             .onDoubleClick { item in
@@ -24,12 +26,20 @@ struct FileView: View {
                     navigateToFolder(item.itemID)
                 }
             }
+            .onDownload { filesToDownload in
+                downloadFiles(filesToDownload)
+            }
             .onAppear {
                 loadFiles()
             }
             .onChange(of: device) {
                 resetNavigation()
                 loadFiles()
+            }
+            .sheet(item: $downloadState) { _ in
+                TransferProgressView(state: $downloadState)
+                    .padding()
+                    .interactiveDismissDisabled(true)
             }
             .toolbar {
                 ToolbarItemGroup(placement: .navigation) {
@@ -101,6 +111,63 @@ struct FileView: View {
                 files = []
             }
             isLoading = false
+        }
+    }
+
+    private func downloadFiles(_ filesToDownload: [MTPFileItem]) {
+
+        guard let device else {
+            return
+        }
+
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = NSLocalizedString("Choose Destination", comment: "Download destination folder picker button")
+
+        guard panel.runModal() == .OK, let destinationFolder = panel.url else {
+            return
+        }
+
+        let folderName = destinationFolder.lastPathComponent
+
+        let sessionID = UUID()
+
+        Task {
+            for (index, file) in filesToDownload.enumerated() {
+                let filename = file.filename ?? "Unknown"
+                let destinationURL = destinationFolder.appendingPathComponent(filename)
+
+                do {
+                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                        let progress = device.downloadFile(id: file.itemID, to: destinationURL) { error in
+                            if let error {
+                                continuation.resume(throwing: error)
+                            } else {
+                                continuation.resume()
+                            }
+                        }
+                        downloadState = DownloadState(
+                            id: sessionID,
+                            filename: filename,
+                            isFolder: file.isFolder,
+                            destinationFolderName: folderName,
+                            progress: progress,
+                            currentIndex: index,
+                            totalCount: filesToDownload.count
+                        )
+                    }
+
+                    // delays 0.3 seconds before sheet dismiss
+                    try? await Task.sleep(for: .seconds(0.3))
+
+                } catch {
+                    NSAlert(error: error).runModal()
+                    break
+                }
+            }
+            downloadState = nil
         }
     }
 }

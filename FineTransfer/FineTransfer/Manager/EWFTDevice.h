@@ -85,7 +85,7 @@ NS_SWIFT_NAME(MTPDevice)
 - (NSProgress *)downloadFileWithID:(uint32_t)fileID
                      toDestination:(NSURL *)destinationURL
                completionHandler:(void (^)(NSError * _Nullable error))completionHandler
-    NS_SWIFT_ASYNC_NAME(downloadFile(id:to:));
+    NS_SWIFT_NAME(downloadFile(id:to:completionHandler:));
 
 /**
  * Uploads a local file to the MTP device.
@@ -105,7 +105,7 @@ NS_SWIFT_NAME(MTPDevice)
                           toFolderID:(uint32_t)folderID
                            storageID:(uint32_t)storageID
                    completionHandler:(void (^)(NSError * _Nullable error))completionHandler
-    NS_SWIFT_ASYNC_NAME(uploadFile(from:toFolderID:storageID:));
+    NS_SWIFT_NAME(uploadFile(from:toFolderID:storageID:completionHandler:));
 
 @end
 
