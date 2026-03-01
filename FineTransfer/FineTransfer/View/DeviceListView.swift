@@ -22,6 +22,17 @@ struct DeviceListView: View {
                 viewModel.selectDevice(new)
             }
         }
+        .overlay {
+            if viewModel.devices.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "cable.connector.slash")
+                        .font(.system(size: 32))
+                        .foregroundStyle(Color.red)
+                    Text("No devices connected")
+                        .foregroundStyle(Color.secondary)
+                }
+            }
+        }
     }
 }
 

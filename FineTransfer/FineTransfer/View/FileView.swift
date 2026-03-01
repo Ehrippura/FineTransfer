@@ -52,7 +52,6 @@ struct FileView: View {
             }
             .sheet(item: $downloadState) { _ in
                 TransferProgressView(state: $downloadState)
-                    .padding()
                     .interactiveDismissDisabled(true)
             }
             .toolbar {

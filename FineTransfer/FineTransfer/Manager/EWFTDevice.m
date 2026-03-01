@@ -147,7 +147,7 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
 
 - (NSProgress *)downloadFileWithID:(uint32_t)fileID
                      toDestination:(NSURL *)destinationURL
-               completionHandler:(void (^)(NSError * _Nullable error))completionHandler {
+                 completionHandler:(void (^)(NSError * _Nullable error))completionHandler {
     NSProgress *progress = [NSProgress progressWithTotalUnitCount:-1];
 
     dispatch_async(_mtpQueue, ^{
