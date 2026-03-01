@@ -9,18 +9,26 @@ import SwiftUI
 
 struct FileView: View {
 
-    @State var device: MTPDevice?
+    var device: MTPDevice?
 
-    @State var files: [MTPFileItem] = []
+    @State private var files: [MTPFileItem] = []
 
     var body: some View {
         FileGridView(files: files)
             .onAppear {
-                guard let device else {
-                    return
-                }
-                files = (try? device.contents(folderID: MTPDevice.rootFolderID, storageID: device.rootStorageID)) ?? []
+                loadFiles()
             }
+            .onChange(of: device) {
+                loadFiles()
+            }
+    }
+
+    private func loadFiles() {
+        guard let device else {
+            files = []
+            return
+        }
+        files = (try? device.contents(folderID: MTPDevice.rootFolderID, storageID: device.rootStorageID)) ?? []
     }
 }
 
