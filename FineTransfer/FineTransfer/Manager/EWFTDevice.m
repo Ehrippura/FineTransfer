@@ -18,9 +18,9 @@ uint32_t const EWFDeviceRootFolderID = LIBMTP_FILES_AND_FOLDERS_ROOT;
 }
 @end
 
-// C callback invoked by libmtp during LIBMTP_Get_File_To_File — runs on _mtpQueue.
+// C callback invoked by libmtp during file transfers — runs on _mtpQueue.
 // Returns 1 to abort the transfer when the caller cancels the NSProgress object.
-static int EWFTDownloadProgressCallback(uint64_t sent, uint64_t total, void const * const data) {
+static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void const * const data) {
     NSProgress *progress = (__bridge NSProgress *)data;
     progress.totalUnitCount = (int64_t)total;
     progress.completedUnitCount = (int64_t)sent;
@@ -154,7 +154,7 @@ static int EWFTDownloadProgressCallback(uint64_t sent, uint64_t total, void cons
         int result = LIBMTP_Get_File_To_File(self->_mtp_device_handle,
                                              fileID,
                                              destinationURL.fileSystemRepresentation,
-                                             EWFTDownloadProgressCallback,
+                                             EWFTTransferProgressCallback,
                                              (__bridge void *)progress);
 
         NSError *completionError = nil;
@@ -171,6 +171,69 @@ static int EWFTDownloadProgressCallback(uint64_t sent, uint64_t total, void cons
                     : @"Failed to download file.";
                 completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                       code:errstack->errornumber
+                                                  userInfo:@{NSLocalizedDescriptionKey: msg}];
+                LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+            }
+        }
+
+        completionHandler(completionError);
+    });
+
+    return progress;
+}
+
+- (NSProgress *)uploadFileFromSource:(NSURL *)sourceURL
+                          toFolderID:(uint32_t)folderID
+                           storageID:(uint32_t)storageID
+                   completionHandler:(void (^)(NSError * _Nullable error))completionHandler {
+    NSProgress *progress = [NSProgress progressWithTotalUnitCount:-1];
+
+    dispatch_async(_mtpQueue, ^{
+        if (!self->_mtp_device_handle) {
+            NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                 code:EWFTMTPErrorGeneral
+                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+            completionHandler(error);
+            return;
+        }
+
+        NSError *attributeError = nil;
+        NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:sourceURL.path
+                                                                               error:&attributeError];
+        if (!attrs) {
+            completionHandler(attributeError);
+            return;
+        }
+
+        LIBMTP_file_t *fileInfo = LIBMTP_new_file_t();
+        fileInfo->filename = strdup(sourceURL.lastPathComponent.UTF8String);
+        fileInfo->filesize = [attrs[NSFileSize] unsignedLongLongValue];
+        fileInfo->parent_id = folderID;
+        fileInfo->storage_id = storageID;
+        fileInfo->filetype = LIBMTP_FILETYPE_UNKNOWN;
+
+        LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+
+        int result = LIBMTP_Send_File_From_File(self->_mtp_device_handle,
+                                                sourceURL.fileSystemRepresentation,
+                                                fileInfo,
+                                                EWFTTransferProgressCallback,
+                                                (__bridge void *)progress);
+        LIBMTP_destroy_file_t(fileInfo);
+
+        NSError *completionError = nil;
+        if (result != 0) {
+            if (progress.isCancelled) {
+                completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                      code:EWFTMTPErrorCancelled
+                                                  userInfo:@{NSLocalizedDescriptionKey: @"Upload was cancelled."}];
+            } else {
+                LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
+                NSString *msg = (errstack && errstack->error_text)
+                    ? [NSString stringWithUTF8String:errstack->error_text]
+                    : @"Failed to upload file.";
+                completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                      code:errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral
                                                   userInfo:@{NSLocalizedDescriptionKey: msg}];
                 LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
             }

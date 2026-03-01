@@ -87,6 +87,26 @@ NS_SWIFT_NAME(MTPDevice)
                completionHandler:(void (^)(NSError * _Nullable error))completionHandler
     NS_SWIFT_ASYNC_NAME(downloadFile(id:to:));
 
+/**
+ * Uploads a local file to the MTP device.
+ *
+ * The returned NSProgress allows callers to observe progress and cancel the transfer.
+ * Progress updates and the completion handler are always delivered on the main queue.
+ *
+ * @param sourceURL          A file:// URL of the local file to upload.
+ * @param folderID           The MTP object ID of the destination folder.
+ *                           Use @c EWFDeviceRootFolderID to upload to the root folder.
+ * @param storageID          The MTP storage ID of the destination storage.
+ * @param completionHandler  Called on the main queue when the transfer finishes.
+ *                           error is nil on success; EWFTMTPErrorCancelled on cancellation.
+ * @return An NSProgress instance (indeterminate total until first callback fires).
+ */
+- (NSProgress *)uploadFileFromSource:(NSURL *)sourceURL
+                          toFolderID:(uint32_t)folderID
+                           storageID:(uint32_t)storageID
+                   completionHandler:(void (^)(NSError * _Nullable error))completionHandler
+    NS_SWIFT_ASYNC_NAME(uploadFile(from:toFolderID:storageID:));
+
 @end
 
 NS_ASSUME_NONNULL_END
