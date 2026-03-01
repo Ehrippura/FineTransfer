@@ -31,15 +31,25 @@ The project uses a two-layer approach:
 
 ### Swift
 
-**Guard statements**: When using `guard let` for optional unwrapping, do NOT write `{ return }` on the same line. Always use a new line for readability.
+**Control flow braces**: When using `guard let` for optional unwrapping, `if-else` statements, or closures, do NOT write `{ return }` or other single-statement bodies on the same line. Always use a new line for readability.
 
 ```swift
 // ❌ Bad - return on same line
 guard let device = deviceManager.currentDevice else { return }
+if condition { doSomething() }
+someFunction { print("done") }
 
 // ✅ Good - return on new line
 guard let device = deviceManager.currentDevice else {
     return
+}
+
+if condition {
+    doSomething()
+}
+
+someFunction {
+    print("done")
 }
 ```
 
