@@ -25,7 +25,7 @@ struct FileGridView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> NSScrollView {
         let layout = NSCollectionViewFlowLayout()
-        layout.itemSize = NSSize(width: 100, height: 120)
+        layout.itemSize = NSSize(width: 100, height: 110)
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 8
         layout.sectionInset = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
@@ -180,5 +180,12 @@ fileprivate class FileCollectionViewItem: NSCollectionViewItem {
 // MARK: - Preview
 
 #Preview {
-    FileGridView(files: [])
+    FileGridView(files: [
+        .dummyFolder(name: "DCIM"),
+        .dummyFolder(name: "Pictures"),
+        .dummyFolder(name: "Music"),
+        .dummyFolder(name: "System Confiuration"),
+        .dummy(filename: "photo.png", filesize: 3_500_000),
+        .dummy(filename: "very saxy.mpg", filesize: 3_500_000),
+    ])
 }

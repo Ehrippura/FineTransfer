@@ -5,3 +5,4 @@
 #import "EWFTDevice.h"
 #import "EWFTDeviceManager.h"
 #import "EWFTFileItem.h"
+#import "EWFTFileItem+Dummy.h"
