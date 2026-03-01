@@ -2,7 +2,7 @@
 //  FileGridView.swift
 //  FineTransfer
 //
-//  Created by Wayne Lin on 2026/3/1.
+//  Created by Tzu-Yi Lin on 2026/3/1.
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  MainModel.swift
 //  FineTransfer
 //
-//  Created by Wayne Lin on 2026/2/28.
+//  Created by Tzu-Yi Lin on 2026/2/28.
 //
 
 import SwiftUI
