@@ -15,7 +15,7 @@ struct DeviceListRow: View {
     var body: some View {
         HStack {
 
-            Image(systemName: "externaldrive")
+            Image(systemName: "externaldrive.connected.to.line.below")
 
             VStack(alignment: .leading) {
                 if let manufacturer = device.manufacturer {

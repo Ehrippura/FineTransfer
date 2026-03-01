@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 
 @class EWFTFileItem;
+@class EWFTStorage;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -22,6 +23,9 @@ NS_SWIFT_NAME(MTPDevice)
 @property (nonatomic, copy, readonly, nullable) NSString *serialNumber;
 
 @property (nonatomic, readonly) uint32_t rootStorageID;
+
+/** All storages available on the device, in the order reported by the device. */
+@property (nonatomic, copy, readonly) NSArray<EWFTStorage *> *storages;
 
 @property (nonatomic, readonly, getter=isConnected) BOOL connected;
 
@@ -85,7 +89,7 @@ NS_SWIFT_NAME(MTPDevice)
 - (NSProgress *)downloadFileWithID:(uint32_t)fileID
                      toDestination:(NSURL *)destinationURL
                  completionHandler:(void (^)(NSError * _Nullable error))completionHandler
-NS_SWIFT_NAME(downloadFile(id:to:completionHandler:));
+    NS_SWIFT_NAME(downloadFile(id:to:completionHandler:));
 
 /**
  * Uploads a local file to the MTP device.

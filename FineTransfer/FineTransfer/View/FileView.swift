@@ -11,6 +11,8 @@ struct FileView: View {
 
     var device: MTPDevice?
 
+    @State private var currentStorage: MTPStorage?
+
     @State private var files: [MTPFileItem] = []
     @State private var isLoading = false
     @State private var currentFolderID: UInt32 = MTPDevice.rootFolderID
@@ -19,6 +21,10 @@ struct FileView: View {
     @State private var forwardStack: [(id: UInt32, name: String)] = []
 
     @State private var downloadState: TransferState?
+
+    init(device: MTPDevice?) {
+        self.device = device
+    }
 
     var body: some View {
         FileGridView(files: files)
@@ -37,6 +43,7 @@ struct FileView: View {
                 deleteFiles(filesToDelete)
             }
             .onAppear {
+                currentStorage = device?.storages.first
                 loadFiles()
             }
             .onChange(of: device) {
@@ -69,12 +76,42 @@ struct FileView: View {
                 }
                 .sharedBackgroundVisibility(.hidden)
 
+                if let device, device.storages.count > 1 {
+                    ToolbarItem(placement: .primaryAction) {
+                        Picker(
+                            "Storage",
+                            selection: Binding(
+                                get: { currentStorage },
+                                set: { newStorage in
+                                    guard newStorage?.storageID != currentStorage?.storageID else {
+                                        return
+                                    }
+                                    currentStorage = newStorage
+                                    resetNavigation()
+                                    loadFiles()
+                                }
+                            )
+                        ) {
+                            ForEach(device.storages, id: \.storageID) { storage in
+                                HStack {
+                                    Image(systemName: "externaldrive")
+                                    Text(storage.storageDescription ?? "Storage \(storage.storageID)")
+                                }
+                                .tag(Optional(storage))
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .fixedSize()
+                    }
+                }
+
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: uploadFiles) {
                         Image(systemName: "arrow.up.square")
                     }
                 }
             }
+            .ignoresSafeArea(edges: .all)
     }
 
     private func navigateToFolder(_ item: MTPFileItem) {
@@ -113,7 +150,7 @@ struct FileView: View {
     }
 
     private func loadFiles() {
-        guard let device else {
+        guard let device, let currentStorage else {
             files = []
             return
         }
@@ -121,7 +158,7 @@ struct FileView: View {
         Task {
             isLoading = true
             do {
-                let items = try await device.contents(folderID: currentFolderID, storageID: device.rootStorageID)
+                let items = try await device.contents(folderID: currentFolderID, storageID: currentStorage.storageID)
                 files = items
             } catch {
                 NSAlert(error: error).runModal()
@@ -225,7 +262,7 @@ struct FileView: View {
 
     private func uploadFiles() {
 
-        guard let device else {
+        guard let device, let currentStorage else {
             return
         }
 
@@ -249,7 +286,7 @@ struct FileView: View {
 
                 do {
                     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                        let progress = device.uploadFile(from: url, toFolderID: currentFolderID, storageID: device.rootStorageID) { error in
+                        let progress = device.uploadFile(from: url, toFolderID: currentFolderID, storageID: currentStorage.storageID) { error in
                             if let error {
                                 continuation.resume(throwing: error)
                             } else {

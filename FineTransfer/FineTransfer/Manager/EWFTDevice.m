@@ -7,6 +7,7 @@
 
 #import "EWFTDevice+Private.h"
 #import "EWFTFileItem+Private.h"
+#import "EWFTStorage+Private.h"
 #import "EWFTMTPError.h"
 #import <MTP/MTP.h>
 
@@ -34,6 +35,15 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
     if (self) {
         _mtp_device_handle = device;
         _mtpQueue = dispatch_queue_create("tw.eternalwind.device.mtp", DISPATCH_QUEUE_SERIAL);
+
+        NSMutableArray<EWFTStorage *> *result = [NSMutableArray array];
+        LIBMTP_devicestorage_t *current = _mtp_device_handle->storage;
+        while (current != NULL) {
+            [result addObject:[[EWFTStorage alloc] initWithMTPStorage:current]];
+            current = current->next;
+        }
+        
+        _storages = [result copy];
     }
     return self;
 }
@@ -89,8 +99,8 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
 }
 
 - (void)contentsOfFolderWithID:(uint32_t)folderID
-                      storageID:(uint32_t)storageID
-              completionHandler:(void (^)(NSArray<EWFTFileItem *> * _Nullable, NSError * _Nullable))completionHandler {
+                     storageID:(uint32_t)storageID
+             completionHandler:(void (^)(NSArray<EWFTFileItem *> * _Nullable, NSError * _Nullable))completionHandler {
     dispatch_async(_mtpQueue, ^{
         if (!self->_mtp_device_handle) {
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain

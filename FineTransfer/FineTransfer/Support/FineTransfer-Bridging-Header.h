@@ -6,3 +6,4 @@
 #import "EWFTDeviceManager.h"
 #import "EWFTFileItem.h"
 #import "EWFTFileItem+Dummy.h"
+#import "EWFTStorage.h"
