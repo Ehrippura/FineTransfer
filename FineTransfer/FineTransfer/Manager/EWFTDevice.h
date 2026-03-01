@@ -30,18 +30,22 @@ NS_SWIFT_NAME(MTPDevice)
 - (void)disconnect;
 
 /**
- * Returns the contents of a folder on the MTP device.
+ * Asynchronously returns the contents of a folder on the MTP device.
  *
- * @param folderID   The MTP object ID of the folder to list.
- *                   Use @c EWFDeviceRootFolderID to list the root folder.
- * @param storageID  The MTP storage ID that contains the folder.
- * @param error      On failure, set to an NSError describing the problem.
- * @return An array of file items in the folder, or @c nil if an error occurred.
+ * Executes on the device's internal serial MTP queue and delivers the result
+ * on the main queue via completionHandler.
+ *
+ * @param folderID           The MTP object ID of the folder to list.
+ *                           Use @c EWFDeviceRootFolderID to list the root folder.
+ * @param storageID          The MTP storage ID that contains the folder.
+ * @param completionHandler  Called on the main queue with the items array (empty if folder
+ *                           is empty, nil on error) and an NSError on failure.
  */
-- (nullable NSArray<EWFTFileItem *> *)contentsOfFolderWithID:(uint32_t)folderID
-                                                   storageID:(uint32_t)storageID
-                                                       error:(NSError **)error
-    NS_SWIFT_NAME(contents(folderID:storageID:));
+- (void)contentsOfFolderWithID:(uint32_t)folderID
+                     storageID:(uint32_t)storageID
+             completionHandler:(void (^)(NSArray<EWFTFileItem *> * _Nullable items,
+                                         NSError * _Nullable error))completionHandler
+    NS_SWIFT_ASYNC_NAME(contents(folderID:storageID:));
 
 /**
  * Downloads a file from the MTP device to a local destination.
@@ -57,11 +61,31 @@ NS_SWIFT_NAME(MTPDevice)
  * @param completionHandler  Called on the main queue when the transfer finishes.
  *                           error is nil on success; EWFTMTPErrorCancelled on cancellation.
  * @return An NSProgress instance (indeterminate total until first callback fires).
+ *
+ * ```swift
+ * // start download
+ * let progress = device.downloadFile(id: fileID, to: destinationURL) { error in
+ *   if let error {
+ *     // EWFTMTPErrorCancelled represented to cancelled by user
+ *     print("failed:", error)
+ *   } else {
+ *     print("complete")
+ *   }
+ * }
+ *
+ * // monitoring progress using combine
+ * progressCancellable = progress.publisher(for: \.fractionCompleted)
+ *   .receive(on: RunLoop.main)
+ *   .assign(to: \.downloadProgress, on: self)
+ *
+ * // cancel
+ * progress.cancel()
+ * ```
  */
 - (NSProgress *)downloadFileWithID:(uint32_t)fileID
                      toDestination:(NSURL *)destinationURL
                completionHandler:(void (^)(NSError * _Nullable error))completionHandler
-    NS_SWIFT_NAME(downloadFile(id:to:completion:));
+    NS_SWIFT_ASYNC_NAME(downloadFile(id:to:));
 
 @end
 

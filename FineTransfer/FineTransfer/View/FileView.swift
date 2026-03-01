@@ -12,6 +12,7 @@ struct FileView: View {
     var device: MTPDevice?
 
     @State private var files: [MTPFileItem] = []
+    @State private var isLoading = false
     @State private var currentFolderID: UInt32 = MTPDevice.rootFolderID
     @State private var backStack: [UInt32] = []
     @State private var forwardStack: [UInt32] = []
@@ -42,6 +43,14 @@ struct FileView: View {
                     }
                     .disabled(forwardStack.isEmpty)
                 }
+
+                ToolbarItem(placement: .primaryAction) {
+                    if isLoading {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
+                .sharedBackgroundVisibility(.hidden)
             }
     }
 
@@ -81,7 +90,18 @@ struct FileView: View {
             files = []
             return
         }
-        files = (try? device.contents(folderID: currentFolderID, storageID: device.rootStorageID)) ?? []
+
+        Task {
+            isLoading = true
+            do {
+                let items = try await device.contents(folderID: currentFolderID, storageID: device.rootStorageID)
+                files = items
+            } catch {
+                NSAlert(error: error).runModal()
+                files = []
+            }
+            isLoading = false
+        }
     }
 }
 

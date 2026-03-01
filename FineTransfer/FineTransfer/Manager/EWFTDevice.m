@@ -33,7 +33,7 @@ static int EWFTDownloadProgressCallback(uint64_t sent, uint64_t total, void cons
     self = [super init];
     if (self) {
         _mtp_device_handle = device;
-        _mtpQueue = dispatch_queue_create("com.ewft.device.mtp", DISPATCH_QUEUE_SERIAL);
+        _mtpQueue = dispatch_queue_create("tw.eternalwind.device.mtp", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -88,50 +88,51 @@ static int EWFTDownloadProgressCallback(uint64_t sent, uint64_t total, void cons
     return _mtp_device_handle->storage->id;
 }
 
-- (nullable NSArray<EWFTFileItem *> *)contentsOfFolderWithID:(uint32_t)folderID
-                                                   storageID:(uint32_t)storageID
-                                                       error:(NSError **)error {
-    if (!_mtp_device_handle) {
-        if (error) {
-            *error = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                         code:EWFTMTPErrorGeneral
-                                     userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+- (void)contentsOfFolderWithID:(uint32_t)folderID
+                      storageID:(uint32_t)storageID
+              completionHandler:(void (^)(NSArray<EWFTFileItem *> * _Nullable, NSError * _Nullable))completionHandler {
+    dispatch_async(_mtpQueue, ^{
+        if (!self->_mtp_device_handle) {
+            NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                 code:EWFTMTPErrorGeneral
+                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+            completionHandler(nil, error);
+            return;
         }
-        return nil;
-    }
 
-    LIBMTP_Clear_Errorstack(_mtp_device_handle);
+        LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
 
-    LIBMTP_file_t *fileList = LIBMTP_Get_Files_And_Folders(_mtp_device_handle, storageID, folderID);
+        LIBMTP_file_t *fileList = LIBMTP_Get_Files_And_Folders(self->_mtp_device_handle, storageID, folderID);
 
-    if (fileList == NULL) {
-        LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(_mtp_device_handle);
-        if (errstack != NULL) {
-            NSString *msg = errstack->error_text
-                ? [NSString stringWithUTF8String:errstack->error_text]
-                : @"Failed to list folder contents.";
-            if (error) {
-                *error = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                             code:errstack->errornumber
-                                         userInfo:@{NSLocalizedDescriptionKey: msg}];
+        if (fileList == NULL) {
+            LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
+            if (errstack != NULL) {
+                NSString *msg = errstack->error_text
+                    ? [NSString stringWithUTF8String:errstack->error_text]
+                    : @"Failed to list folder contents.";
+                NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                     code:errstack->errornumber
+                                                 userInfo:@{NSLocalizedDescriptionKey: msg}];
+                LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+                completionHandler(nil, error);
+            } else {
+                completionHandler(@[], nil);
             }
-            LIBMTP_Clear_Errorstack(_mtp_device_handle);
-            return nil;
+            return;
         }
-        return @[];
-    }
 
-    NSMutableArray<EWFTFileItem *> *result = [NSMutableArray array];
-    LIBMTP_file_t *current = fileList;
-    while (current != NULL) {
-        EWFTFileItem *item = [[EWFTFileItem alloc] initWithMTPFile:current];
-        [result addObject:item];
-        LIBMTP_file_t *next = current->next;
-        LIBMTP_destroy_file_t(current);
-        current = next;
-    }
+        NSMutableArray<EWFTFileItem *> *items = [NSMutableArray array];
+        LIBMTP_file_t *current = fileList;
+        while (current != NULL) {
+            [items addObject:[[EWFTFileItem alloc] initWithMTPFile:current]];
+            LIBMTP_file_t *next = current->next;
+            LIBMTP_destroy_file_t(current);
+            current = next;
+        }
 
-    return [result copy];
+        NSArray<EWFTFileItem *> *result = [items copy];
+        completionHandler(result, nil);
+    });
 }
 
 - (NSProgress *)downloadFileWithID:(uint32_t)fileID
@@ -144,7 +145,7 @@ static int EWFTDownloadProgressCallback(uint64_t sent, uint64_t total, void cons
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                  code:EWFTMTPErrorGeneral
                                              userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
-            dispatch_async(dispatch_get_main_queue(), ^{ completionHandler(error); });
+            completionHandler(error);
             return;
         }
 
