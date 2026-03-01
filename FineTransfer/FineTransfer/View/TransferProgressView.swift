@@ -8,7 +8,7 @@ import Combine
 
 struct TransferProgressView: View {
 
-    @Binding var state: DownloadState?
+    @Binding var state: TransferState?
 
     @State private var fraction: Double = 0
     @State private var completed: Int64 = 0
@@ -109,7 +109,7 @@ struct TransferProgressView: View {
 }
 
 #Preview("File") {
-    @Previewable @State var state: DownloadState? = DownloadState(
+    @Previewable @State var state: TransferState? = TransferState(
         id: UUID(),
         filename: "IMG_20260301_142500.jpg",
         isFolder: false,
@@ -126,7 +126,7 @@ struct TransferProgressView: View {
 }
 
 #Preview("Folder") {
-    @Previewable @State var state: DownloadState? = DownloadState(
+    @Previewable @State var state: TransferState? = TransferState(
         id: UUID(),
         filename: "Projects",
         isFolder: true,

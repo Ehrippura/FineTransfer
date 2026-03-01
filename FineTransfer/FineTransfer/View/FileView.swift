@@ -14,20 +14,24 @@ struct FileView: View {
     @State private var files: [MTPFileItem] = []
     @State private var isLoading = false
     @State private var currentFolderID: UInt32 = MTPDevice.rootFolderID
-    @State private var backStack: [UInt32] = []
-    @State private var forwardStack: [UInt32] = []
+    @State private var currentFolderName: String = ""
+    @State private var backStack: [(id: UInt32, name: String)] = []
+    @State private var forwardStack: [(id: UInt32, name: String)] = []
 
-    @State private var downloadState: DownloadState?
+    @State private var downloadState: TransferState?
 
     var body: some View {
         FileGridView(files: files)
             .onDoubleClick { item in
                 if item.isFolder {
-                    navigateToFolder(item.itemID)
+                    navigateToFolder(item)
                 }
             }
             .onDownload { filesToDownload in
                 downloadFiles(filesToDownload)
+            }
+            .onUpload {
+                uploadFiles()
             }
             .onAppear {
                 loadFiles()
@@ -61,36 +65,46 @@ struct FileView: View {
                     }
                 }
                 .sharedBackgroundVisibility(.hidden)
+
+                ToolbarItem(placement: .primaryAction) {
+                    Button(action: uploadFiles) {
+                        Image(systemName: "arrow.up.square")
+                    }
+                }
             }
     }
 
-    private func navigateToFolder(_ folderID: UInt32) {
-        backStack.append(currentFolderID)
+    private func navigateToFolder(_ item: MTPFileItem) {
+        backStack.append((id: currentFolderID, name: currentFolderName))
         forwardStack.removeAll()
-        currentFolderID = folderID
+        currentFolderID = item.itemID
+        currentFolderName = item.filename ?? ""
         loadFiles()
     }
 
     private func goBack() {
-        guard let previousFolderID = backStack.popLast() else {
+        guard let previous = backStack.popLast() else {
             return
         }
-        forwardStack.append(currentFolderID)
-        currentFolderID = previousFolderID
+        forwardStack.append((id: currentFolderID, name: currentFolderName))
+        currentFolderID = previous.id
+        currentFolderName = previous.name
         loadFiles()
     }
 
     private func goForward() {
-        guard let nextFolderID = forwardStack.popLast() else {
+        guard let next = forwardStack.popLast() else {
             return
         }
-        backStack.append(currentFolderID)
-        currentFolderID = nextFolderID
+        backStack.append((id: currentFolderID, name: currentFolderName))
+        currentFolderID = next.id
+        currentFolderName = next.name
         loadFiles()
     }
 
     private func resetNavigation() {
         currentFolderID = MTPDevice.rootFolderID
+        currentFolderName = ""
         backStack.removeAll()
         forwardStack.removeAll()
     }
@@ -148,7 +162,7 @@ struct FileView: View {
                                 continuation.resume()
                             }
                         }
-                        downloadState = DownloadState(
+                        downloadState = TransferState(
                             id: sessionID,
                             filename: filename,
                             isFolder: file.isFolder,
@@ -159,8 +173,8 @@ struct FileView: View {
                         )
                     }
 
-                    // delays 0.3 seconds before sheet dismiss
-                    try? await Task.sleep(for: .seconds(0.3))
+                    // delays 0.2 seconds before sheet dismiss
+                    try? await Task.sleep(for: .seconds(0.2))
 
                 } catch {
                     NSAlert(error: error).runModal()
@@ -168,6 +182,63 @@ struct FileView: View {
                 }
             }
             downloadState = nil
+        }
+    }
+
+    private func uploadFiles() {
+
+        guard let device else {
+            return
+        }
+
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.prompt = NSLocalizedString("Upload", comment: "Upload files picker button")
+
+        guard panel.runModal() == .OK, !panel.urls.isEmpty else {
+            return
+        }
+
+        let filesToUpload = panel.urls
+        let destinationName = currentFolderName.isEmpty ? (device.displayName ?? "Device") : currentFolderName
+        let sessionID = UUID()
+
+        Task {
+            for (index, url) in filesToUpload.enumerated() {
+                let filename = url.lastPathComponent
+
+                do {
+                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                        let progress = device.uploadFile(from: url, toFolderID: currentFolderID, storageID: device.rootStorageID) { error in
+                            if let error {
+                                continuation.resume(throwing: error)
+                            } else {
+                                continuation.resume()
+                            }
+                        }
+                        downloadState = TransferState(
+                            id: sessionID,
+                            filename: filename,
+                            isFolder: false,
+                            destinationFolderName: destinationName,
+                            progress: progress,
+                            currentIndex: index,
+                            totalCount: filesToUpload.count
+                        )
+                    }
+
+                    // delays 0.2 seconds before sheet dismiss
+                    try? await Task.sleep(for: .seconds(0.2))
+
+                } catch {
+                    NSAlert(error: error).runModal()
+                    break
+                }
+            }
+            downloadState = nil
+            loadFiles()
         }
     }
 }

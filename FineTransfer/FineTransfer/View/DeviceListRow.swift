@@ -21,8 +21,10 @@ struct DeviceListRow: View {
                 if let manufacturer = device.manufacturer {
                     Text(manufacturer)
                 }
-                if let displayName = device.displayName {
+                if let displayName = device.displayName, !displayName.isEmpty {
                     Text(displayName)
+                } else if let modelName = device.modelName {
+                    Text(modelName.isEmpty ? "Unknown" : modelName)
                 }
             }
         }

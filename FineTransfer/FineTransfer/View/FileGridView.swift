@@ -15,18 +15,19 @@ struct FileGridView: NSViewRepresentable {
     var files: [MTPFileItem]
     fileprivate var onItemDoubleClick: ((MTPFileItem) -> Void)?
     fileprivate var onDownload: (([MTPFileItem]) -> Void)?
+    fileprivate var onUpload: (() -> Void)?
 
     init(files: [MTPFileItem]) {
         self.files = files
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload)
+        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onUpload: onUpload)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
         let layout = NSCollectionViewFlowLayout()
-        layout.itemSize = NSSize(width: 100, height: 110)
+        layout.itemSize = NSSize(width: 110, height: 110)
         layout.minimumInteritemSpacing = 8
         layout.minimumLineSpacing = 8
         layout.sectionInset = NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
@@ -65,6 +66,7 @@ struct FileGridView: NSViewRepresentable {
         context.coordinator.files = files
         context.coordinator.onItemDoubleClick = onItemDoubleClick
         context.coordinator.onDownload = onDownload
+        context.coordinator.onUpload = onUpload
         if let collectionView = scrollView.documentView as? NSCollectionView {
             collectionView.reloadData()
         }
@@ -86,6 +88,12 @@ extension FileGridView {
         copy.onDownload = action
         return copy
     }
+
+    func onUpload(perform action: @escaping () -> Void) -> FileGridView {
+        var copy = self
+        copy.onUpload = action
+        return copy
+    }
 }
 
 // MARK: - Coordinator
@@ -97,12 +105,14 @@ extension FileGridView {
         var files: [MTPFileItem]
         var onItemDoubleClick: ((MTPFileItem) -> Void)?
         var onDownload: (([MTPFileItem]) -> Void)?
+        var onUpload: (() -> Void)?
         fileprivate weak var collectionView: FileCollectionView?
 
-        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?) {
+        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?, onUpload: (() -> Void)?) {
             self.files = files
             self.onItemDoubleClick = onItemDoubleClick
             self.onDownload = onDownload
+            self.onUpload = onUpload
         }
 
         // MARK: NSCollectionViewDataSource
@@ -158,6 +168,25 @@ extension FileGridView {
             onDownload?(menuTargetFiles)
         }
 
+        func buildEmptySpaceContextMenu() -> NSMenu? {
+            guard onUpload != nil else {
+                return nil
+            }
+            let menu = NSMenu()
+            let uploadItem = NSMenuItem(
+                title: NSLocalizedString("Upload", comment: "Context menu: upload files to current folder"),
+                action: #selector(uploadMenuItemClicked),
+                keyEquivalent: ""
+            )
+            uploadItem.target = self
+            menu.addItem(uploadItem)
+            return menu
+        }
+
+        @objc private func uploadMenuItemClicked() {
+            onUpload?()
+        }
+
         // MARK: Double Click
 
         @objc func handleDoubleClick(_ sender: NSClickGestureRecognizer) {
@@ -184,7 +213,7 @@ private class FileCollectionView: NSCollectionView {
     override func menu(for event: NSEvent) -> NSMenu? {
         let point = convert(event.locationInWindow, from: nil)
         guard let indexPath = indexPathForItem(at: point) else {
-            return nil
+            return coordinator?.buildEmptySpaceContextMenu()
         }
 
         // Right-click on an unselected item: select only that item
