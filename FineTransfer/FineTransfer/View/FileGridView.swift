@@ -7,7 +7,6 @@
 
 import SwiftUI
 import AppKit
-import UniformTypeIdentifiers
 
 // MARK: - FileGridView (NSViewRepresentable)
 
@@ -174,17 +173,7 @@ fileprivate class FileCollectionViewItem: NSCollectionViewItem {
 
     func configure(with file: MTPFileItem) {
         nameLabel.stringValue = file.filename ?? "Unknown"
-
-        if file.isFolder {
-            iconView.image = NSWorkspace.shared.icon(for: .folder)
-        } else {
-            let ext = (file.filename as? NSString)?.pathExtension ?? ""
-            if let utType = UTType(filenameExtension: ext) {
-                iconView.image = NSWorkspace.shared.icon(for: utType)
-            } else {
-                iconView.image = NSWorkspace.shared.icon(for: .data)
-            }
-        }
+        iconView.image = NSWorkspace.shared.icon(forFilename: file.filename ?? "", isFolder: file.isFolder)
     }
 }
 
