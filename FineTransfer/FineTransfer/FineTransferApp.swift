@@ -9,9 +9,23 @@ import SwiftUI
 
 @main
 struct FineTransferApp: App {
+
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate: AppDelegate
+
+    init() {
+        NSWindow.allowsAutomaticWindowTabbing = false
+    }
+
     var body: some Scene {
-        WindowGroup {
+        Window("Fine Transfer", id: "main") {
             MainView()
         }
+    }
+}
+
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        sender == NSApp
     }
 }
