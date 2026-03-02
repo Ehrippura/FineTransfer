@@ -48,6 +48,7 @@ struct FileView: View {
             .onDelete { filesToDelete in
                 viewModel.deleteFiles(filesToDelete)
             }
+            .navigationTitle(viewModel.currentFolderName.isEmpty ? "Root" : viewModel.currentFolderName)
             .onAppear {
                 viewModel.setDevice(device)
             }
