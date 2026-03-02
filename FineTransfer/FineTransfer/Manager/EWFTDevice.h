@@ -125,6 +125,25 @@ NS_SWIFT_NAME(MTPDevice)
          completionHandler:(void (^)(NSError * _Nullable error))completionHandler
     NS_SWIFT_ASYNC_NAME(deleteObject(id:));
 
+/**
+ * Creates a new folder on the MTP device.
+ *
+ * Executes on the device's internal serial MTP queue and delivers the result
+ * on the main queue via completionHandler.
+ *
+ * @param name               The name for the new folder.
+ * @param parentID           The MTP object ID of the parent folder.
+ *                           Use @c EWFDeviceRootFolderID to create at root.
+ * @param storageID          The MTP storage ID where the folder will be created.
+ * @param completionHandler  Called on the main queue with the new folder's object ID and
+ *                           an NSError on failure (folderID is 0 on failure).
+ */
+- (void)createFolderWithName:(NSString *)name
+                    parentID:(uint32_t)parentID
+                   storageID:(uint32_t)storageID
+           completionHandler:(void (^)(uint32_t folderID, NSError * _Nullable error))completionHandler
+    NS_SWIFT_ASYNC_NAME(createFolder(name:parentID:storageID:));
+
 @end
 
 NS_ASSUME_NONNULL_END

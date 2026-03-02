@@ -19,6 +19,7 @@ struct FileGridView: NSViewRepresentable {
     fileprivate var onDelete: (([MTPFileItem]) -> Void)?
     fileprivate var onUpload: (() -> Void)?
     fileprivate var onDropUpload: (([URL]) -> Void)?
+    fileprivate var onNewFolder: (() -> Void)?
 
     init(files: [MTPFileItem]) {
         self.files = files.sorted { lhs, rhs in
@@ -30,7 +31,7 @@ struct FileGridView: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onDelete: onDelete, onUpload: onUpload, onDropUpload: onDropUpload)
+        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onDelete: onDelete, onUpload: onUpload, onDropUpload: onDropUpload, onNewFolder: onNewFolder)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -79,6 +80,7 @@ struct FileGridView: NSViewRepresentable {
         context.coordinator.onDelete = onDelete
         context.coordinator.onUpload = onUpload
         context.coordinator.onDropUpload = onDropUpload
+        context.coordinator.onNewFolder = onNewFolder
         if let collectionView = scrollView.documentView as? NSCollectionView {
             collectionView.reloadData()
         }
@@ -118,6 +120,12 @@ extension FileGridView {
         copy.onDropUpload = action
         return copy
     }
+
+    func onNewFolder(perform action: @escaping () -> Void) -> FileGridView {
+        var copy = self
+        copy.onNewFolder = action
+        return copy
+    }
 }
 
 // MARK: - Coordinator
@@ -133,6 +141,7 @@ extension FileGridView {
         var onDelete: (([MTPFileItem]) -> Void)?
         var onUpload: (() -> Void)?
         var onDropUpload: (([URL]) -> Void)?
+        var onNewFolder: (() -> Void)?
         fileprivate weak var collectionView: FileCollectionView?
 
         init(
@@ -141,7 +150,8 @@ extension FileGridView {
             onDownload: (([MTPFileItem], URL?, (((any Error)?) -> Void)?) -> Void)?,
             onDelete: (([MTPFileItem]) -> Void)?,
             onUpload: (() -> Void)?,
-            onDropUpload: (([URL]) -> Void)?
+            onDropUpload: (([URL]) -> Void)?,
+            onNewFolder: (() -> Void)?
         ) {
             self.files = files
             self.onItemDoubleClick = onItemDoubleClick
@@ -149,6 +159,7 @@ extension FileGridView {
             self.onDelete = onDelete
             self.onUpload = onUpload
             self.onDropUpload = onDropUpload
+            self.onNewFolder = onNewFolder
         }
 
         // MARK: NSCollectionViewDataSource
@@ -196,6 +207,7 @@ extension FileGridView {
                 keyEquivalent: ""
             )
             downloadItem.target = self
+            downloadItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
             menu.addItem(downloadItem)
 
             if onDelete != nil {
@@ -206,6 +218,7 @@ extension FileGridView {
                     keyEquivalent: ""
                 )
                 deleteItem.target = self
+                deleteItem.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)?.withSymbolConfiguration(.init(hierarchicalColor: .red))
                 menu.addItem(deleteItem)
             }
 
@@ -221,22 +234,42 @@ extension FileGridView {
         }
 
         func buildEmptySpaceContextMenu() -> NSMenu? {
-            guard onUpload != nil else {
+            guard onUpload != nil || onNewFolder != nil else {
                 return nil
             }
             let menu = NSMenu()
-            let uploadItem = NSMenuItem(
-                title: NSLocalizedString("Upload", comment: "Context menu: upload files to current folder"),
-                action: #selector(uploadMenuItemClicked),
-                keyEquivalent: ""
-            )
-            uploadItem.target = self
-            menu.addItem(uploadItem)
+            if onNewFolder != nil {
+                let newFolderItem = NSMenuItem(
+                    title: NSLocalizedString("New Folder", comment: "Context menu: create a new folder on the device"),
+                    action: #selector(newFolderMenuItemClicked),
+                    keyEquivalent: ""
+                )
+                newFolderItem.image = NSImage(systemSymbolName: "folder.badge.plus", accessibilityDescription: nil)
+                newFolderItem.target = self
+                menu.addItem(newFolderItem)
+            }
+            if onUpload != nil {
+                if !menu.items.isEmpty {
+                    menu.addItem(.separator())
+                }
+                let uploadItem = NSMenuItem(
+                    title: NSLocalizedString("Upload", comment: "Context menu: upload files to current folder"),
+                    action: #selector(uploadMenuItemClicked),
+                    keyEquivalent: ""
+                )
+                uploadItem.target = self
+                uploadItem.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
+                menu.addItem(uploadItem)
+            }
             return menu
         }
 
         @objc private func uploadMenuItemClicked() {
             onUpload?()
+        }
+
+        @objc private func newFolderMenuItemClicked() {
+            onNewFolder?()
         }
 
         // MARK: Double Click

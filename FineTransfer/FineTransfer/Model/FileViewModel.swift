@@ -261,6 +261,41 @@ class FileViewModel {
         uploadFiles(urls: panel.urls)
     }
 
+    func createFolder() {
+        guard let device, let currentStorage else {
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("New Folder", comment: "New folder dialog title")
+        alert.addButton(withTitle: NSLocalizedString("Create", comment: "Create folder button"))
+        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "Cancel button"))
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        textField.stringValue = NSLocalizedString("untitled folder", comment: "Default new folder name")
+        textField.selectText(nil)
+        alert.accessoryView = textField
+        alert.window.initialFirstResponder = textField
+
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            return
+        }
+
+        let name = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            return
+        }
+
+        Task {
+            do {
+                _ = try await device.createFolder(name: name, parentID: currentFolderID, storageID: currentStorage.storageID)
+                loadFiles()
+            } catch {
+                NSAlert(error: error).runModal()
+            }
+        }
+    }
+
     func uploadFiles(urls: [URL]) {
 
         guard let device, let currentStorage else {

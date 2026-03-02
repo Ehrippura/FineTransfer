@@ -283,6 +283,41 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
     });
 }
 
+- (void)createFolderWithName:(NSString *)name
+                    parentID:(uint32_t)parentID
+                   storageID:(uint32_t)storageID
+           completionHandler:(void (^)(uint32_t folderID, NSError * _Nullable error))completionHandler {
+    dispatch_async(_mtpQueue, ^{
+        if (!self->_mtp_device_handle) {
+            NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                 code:EWFTMTPErrorGeneral
+                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+            completionHandler(0, error);
+            return;
+        }
+
+        LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+
+        char *folderName = strdup(name.UTF8String);
+        uint32_t newID = LIBMTP_Create_Folder(self->_mtp_device_handle, folderName, parentID, storageID);
+        free(folderName);
+
+        NSError *completionError = nil;
+        if (newID == 0) {
+            LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
+            NSString *msg = (errstack && errstack->error_text)
+                ? [NSString stringWithUTF8String:errstack->error_text]
+                : @"Failed to create folder.";
+            completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                  code:errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral
+                                              userInfo:@{NSLocalizedDescriptionKey: msg}];
+            LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+        }
+
+        completionHandler(newID, completionError);
+    });
+}
+
 - (NSString *)description {
     return [NSString stringWithFormat:@"%@ <displayName=%@, manufacturer=%@, modelName=%@>",
             [super description],

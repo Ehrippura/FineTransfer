@@ -45,6 +45,9 @@ struct FileView: View {
             .onDropUpload { urls in
                 viewModel.uploadFiles(urls: urls)
             }
+            .onNewFolder {
+                viewModel.createFolder()
+            }
             .onDelete { filesToDelete in
                 viewModel.deleteFiles(filesToDelete)
             }
@@ -110,7 +113,7 @@ struct FileView: View {
 
                 ToolbarItem(placement: .primaryAction) {
                     Button(action: viewModel.uploadFiles) {
-                        Image(systemName: "arrow.up.square")
+                        Image(systemName: "square.and.arrow.up")
                     }
                 }
             }
