@@ -117,8 +117,10 @@ class FileViewModel {
 
             if file.isFolder {
                 do {
+                    let isDirectory = (try? destination.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+                    let parentDir = isDirectory ? destination : destination.deletingLastPathComponent()
                     try await downloadFolderItem(
-                        file, to: destination, storageID: storageID,
+                        file, to: parentDir, storageID: storageID,
                         sessionID: sessionID, batchIndex: index, batchTotal: filesToDownload.count
                     )
                 } catch {

@@ -264,9 +264,6 @@ extension FileGridView {
                 return nil
             }
             let file = files[indexPath.item]
-            guard !file.isFolder else {
-                return nil
-            }
             return MTPFilePromiseProvider(fileItem: file, delegate: self)
         }
 
@@ -416,9 +413,14 @@ private final class MTPFilePromiseProvider: NSFilePromiseProvider, @unchecked Se
     var fileItem: MTPFileItem!
 
     convenience init(fileItem: MTPFileItem, delegate: NSFilePromiseProviderDelegate) {
-        let ext = ((fileItem.filename ?? "") as NSString).pathExtension
-        let fileType = (!ext.isEmpty ? UTType(filenameExtension: ext)?.identifier : nil)
+        let fileType: String
+        if fileItem.isFolder {
+            fileType = UTType.folder.identifier
+        } else {
+            let ext = ((fileItem.filename ?? "") as NSString).pathExtension
+            fileType = (!ext.isEmpty ? UTType(filenameExtension: ext)?.identifier : nil)
                        ?? UTType.data.identifier
+        }
         self.init(fileType: fileType, delegate: delegate)
         self.fileItem = fileItem
     }
