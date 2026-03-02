@@ -250,7 +250,7 @@ class FileViewModel {
     func uploadFiles() {
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
-        panel.canChooseDirectories = false
+        panel.canChooseDirectories = true
         panel.allowsMultipleSelection = true
         panel.prompt = NSLocalizedString("Upload", comment: "Upload files picker button")
 
@@ -307,31 +307,42 @@ class FileViewModel {
 
         Task {
             for (index, url) in urls.enumerated() {
-                let filename = url.lastPathComponent
-
+                let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
                 do {
-                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                        let progress = device.uploadFile(from: url, toFolderID: currentFolderID, storageID: currentStorage.storageID) { error in
-                            if let error {
-                                continuation.resume(throwing: error)
-                            } else {
-                                continuation.resume()
-                            }
-                        }
-                        transferState = TransferState(
-                            id: sessionID,
-                            filename: filename,
-                            isFolder: false,
-                            destinationFolderName: destinationName,
-                            progress: progress,
-                            currentIndex: index,
-                            totalCount: urls.count
+                    if isDirectory {
+                        try await uploadFolderItem(
+                            url,
+                            toParentID: currentFolderID,
+                            storageID: currentStorage.storageID,
+                            destinationName: destinationName,
+                            sessionID: sessionID,
+                            batchIndex: index,
+                            batchTotal: urls.count
                         )
+                    } else {
+                        let filename = url.lastPathComponent
+                        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                            let progress = device.uploadFile(from: url, toFolderID: currentFolderID, storageID: currentStorage.storageID) { error in
+                                if let error {
+                                    continuation.resume(throwing: error)
+                                } else {
+                                    continuation.resume()
+                                }
+                            }
+                            transferState = TransferState(
+                                id: sessionID,
+                                filename: filename,
+                                isFolder: false,
+                                destinationFolderName: destinationName,
+                                progress: progress,
+                                currentIndex: index,
+                                totalCount: urls.count
+                            )
+                        }
+
+                        // delays 0.2 seconds before sheet dismiss
+                        try? await Task.sleep(for: .seconds(0.2))
                     }
-
-                    // delays 0.2 seconds before sheet dismiss
-                    try? await Task.sleep(for: .seconds(0.2))
-
                 } catch {
                     NSAlert(error: error).runModal()
                     break
@@ -339,6 +350,64 @@ class FileViewModel {
             }
             transferState = nil
             loadFiles()
+        }
+    }
+
+    private func uploadFolderItem(
+        _ localFolderURL: URL,
+        toParentID parentID: UInt32,
+        storageID: UInt32,
+        destinationName: String,
+        sessionID: UUID,
+        batchIndex: Int,
+        batchTotal: Int
+    ) async throws {
+        guard let device else {
+            return
+        }
+
+        let folderName = localFolderURL.lastPathComponent
+        let newFolderID = try await device.createFolder(name: folderName, parentID: parentID, storageID: storageID)
+
+        let contents = try FileManager.default.contentsOfDirectory(
+            at: localFolderURL,
+            includingPropertiesForKeys: [.isDirectoryKey],
+            options: .skipsHiddenFiles
+        )
+
+        for itemURL in contents {
+            let isDirectory = (try? itemURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+            if isDirectory {
+                try await uploadFolderItem(
+                    itemURL,
+                    toParentID: newFolderID,
+                    storageID: storageID,
+                    destinationName: folderName,
+                    sessionID: sessionID,
+                    batchIndex: batchIndex,
+                    batchTotal: batchTotal
+                )
+            } else {
+                let filename = itemURL.lastPathComponent
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    let progress = device.uploadFile(from: itemURL, toFolderID: newFolderID, storageID: storageID) { error in
+                        if let error {
+                            continuation.resume(throwing: error)
+                        } else {
+                            continuation.resume()
+                        }
+                    }
+                    transferState = TransferState(
+                        id: sessionID,
+                        filename: filename,
+                        isFolder: false,
+                        destinationFolderName: folderName,
+                        progress: progress,
+                        currentIndex: batchIndex,
+                        totalCount: batchTotal
+                    )
+                }
+            }
         }
     }
 
