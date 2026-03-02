@@ -283,6 +283,40 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
     });
 }
 
+- (void)renameObjectWithID:(uint32_t)objectID
+                   newName:(NSString *)newName
+         completionHandler:(void (^)(NSError * _Nullable error))completionHandler {
+    dispatch_async(_mtpQueue, ^{
+        if (!self->_mtp_device_handle) {
+            NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                 code:EWFTMTPErrorGeneral
+                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+            completionHandler(error);
+            return;
+        }
+
+        LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+
+        char *name = strdup(newName.UTF8String);
+        int result = LIBMTP_Set_Object_Filename(self->_mtp_device_handle, objectID, name);
+        free(name);
+
+        NSError *completionError = nil;
+        if (result != 0) {
+            LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
+            NSString *msg = (errstack && errstack->error_text)
+                ? [NSString stringWithUTF8String:errstack->error_text]
+                : @"Failed to rename object.";
+            completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
+                                                  code:errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral
+                                              userInfo:@{NSLocalizedDescriptionKey: msg}];
+            LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
+        }
+
+        completionHandler(completionError);
+    });
+}
+
 - (void)createFolderWithName:(NSString *)name
                     parentID:(uint32_t)parentID
                    storageID:(uint32_t)storageID

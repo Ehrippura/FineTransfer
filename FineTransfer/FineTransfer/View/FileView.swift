@@ -48,6 +48,9 @@ struct FileView: View {
             .onNewFolder {
                 viewModel.createFolder()
             }
+            .onRename { file in
+                viewModel.renameFile(file)
+            }
             .onDelete { filesToDelete in
                 viewModel.deleteFiles(filesToDelete)
             }

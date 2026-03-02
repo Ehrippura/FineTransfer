@@ -126,6 +126,22 @@ NS_SWIFT_NAME(MTPDevice)
     NS_SWIFT_ASYNC_NAME(deleteObject(id:));
 
 /**
+ * Renames an object (file or folder) on the MTP device.
+ *
+ * Executes on the device's internal serial MTP queue and delivers the result
+ * on the main queue via completionHandler.
+ *
+ * @param objectID           The MTP object ID of the item to rename.
+ * @param newName            The new name for the object.
+ * @param completionHandler  Called on the main queue when the operation finishes.
+ *                           error is nil on success.
+ */
+- (void)renameObjectWithID:(uint32_t)objectID
+                   newName:(NSString *)newName
+         completionHandler:(void (^)(NSError * _Nullable error))completionHandler
+    NS_SWIFT_ASYNC_NAME(renameObject(id:newName:));
+
+/**
  * Creates a new folder on the MTP device.
  *
  * Executes on the device's internal serial MTP queue and delivers the result

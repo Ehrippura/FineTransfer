@@ -261,6 +261,41 @@ class FileViewModel {
         uploadFiles(urls: panel.urls)
     }
 
+    func renameFile(_ file: MTPFileItem) {
+        guard let device else {
+            return
+        }
+
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Rename", comment: "Rename dialog title")
+        alert.addButton(withTitle: NSLocalizedString("Rename", comment: "Rename confirmation button"))
+        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "Cancel button"))
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
+        textField.stringValue = file.filename ?? ""
+        textField.selectText(nil)
+        alert.accessoryView = textField
+        alert.window.initialFirstResponder = textField
+
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            return
+        }
+
+        let newName = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !newName.isEmpty, newName != file.filename else {
+            return
+        }
+
+        Task {
+            do {
+                try await device.renameObject(id: file.itemID, newName: newName)
+                loadFiles()
+            } catch {
+                NSAlert(error: error).runModal()
+            }
+        }
+    }
+
     func createFolder() {
         guard let device, let currentStorage else {
             return

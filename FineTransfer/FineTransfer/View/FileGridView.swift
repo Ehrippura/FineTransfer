@@ -20,6 +20,7 @@ struct FileGridView: NSViewRepresentable {
     fileprivate var onUpload: (() -> Void)?
     fileprivate var onDropUpload: (([URL]) -> Void)?
     fileprivate var onNewFolder: (() -> Void)?
+    fileprivate var onRename: ((MTPFileItem) -> Void)?
 
     init(files: [MTPFileItem]) {
         self.files = files.sorted { lhs, rhs in
@@ -31,7 +32,7 @@ struct FileGridView: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onDelete: onDelete, onUpload: onUpload, onDropUpload: onDropUpload, onNewFolder: onNewFolder)
+        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onDelete: onDelete, onUpload: onUpload, onDropUpload: onDropUpload, onNewFolder: onNewFolder, onRename: onRename)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -81,6 +82,7 @@ struct FileGridView: NSViewRepresentable {
         context.coordinator.onUpload = onUpload
         context.coordinator.onDropUpload = onDropUpload
         context.coordinator.onNewFolder = onNewFolder
+        context.coordinator.onRename = onRename
         if let collectionView = scrollView.documentView as? NSCollectionView {
             collectionView.reloadData()
         }
@@ -126,6 +128,12 @@ extension FileGridView {
         copy.onNewFolder = action
         return copy
     }
+
+    func onRename(perform action: @escaping (MTPFileItem) -> Void) -> FileGridView {
+        var copy = self
+        copy.onRename = action
+        return copy
+    }
 }
 
 // MARK: - Coordinator
@@ -142,6 +150,7 @@ extension FileGridView {
         var onUpload: (() -> Void)?
         var onDropUpload: (([URL]) -> Void)?
         var onNewFolder: (() -> Void)?
+        var onRename: ((MTPFileItem) -> Void)?
         fileprivate weak var collectionView: FileCollectionView?
 
         init(
@@ -151,7 +160,8 @@ extension FileGridView {
             onDelete: (([MTPFileItem]) -> Void)?,
             onUpload: (() -> Void)?,
             onDropUpload: (([URL]) -> Void)?,
-            onNewFolder: (() -> Void)?
+            onNewFolder: (() -> Void)?,
+            onRename: ((MTPFileItem) -> Void)?
         ) {
             self.files = files
             self.onItemDoubleClick = onItemDoubleClick
@@ -160,6 +170,7 @@ extension FileGridView {
             self.onUpload = onUpload
             self.onDropUpload = onDropUpload
             self.onNewFolder = onNewFolder
+            self.onRename = onRename
         }
 
         // MARK: NSCollectionViewDataSource
@@ -210,6 +221,17 @@ extension FileGridView {
             downloadItem.image = NSImage(systemSymbolName: "square.and.arrow.down", accessibilityDescription: nil)
             menu.addItem(downloadItem)
 
+            if items.count == 1 {
+                let renameItem = NSMenuItem(
+                    title: NSLocalizedString("Rename", comment: "Context menu: rename selected item"),
+                    action: #selector(renameMenuItemClicked),
+                    keyEquivalent: ""
+                )
+                renameItem.target = self
+                renameItem.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
+                menu.addItem(renameItem)
+            }
+
             if onDelete != nil {
                 menu.addItem(.separator())
                 let deleteItem = NSMenuItem(
@@ -227,6 +249,13 @@ extension FileGridView {
 
         @objc private func downloadMenuItemClicked() {
             onDownload?(menuTargetFiles, nil, nil)
+        }
+
+        @objc private func renameMenuItemClicked() {
+            guard let file = menuTargetFiles.first else {
+                return
+            }
+            onRename?(file)
         }
 
         @objc private func deleteMenuItemClicked() {
