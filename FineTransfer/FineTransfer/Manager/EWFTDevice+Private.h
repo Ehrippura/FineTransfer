@@ -12,6 +12,6 @@
 
 @interface EWFTDevice()
 
-- (instancetype)initWithDevice:(LIBMTP_mtpdevice_t *)device NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithDevice:(LIBMTP_mtpdevice_t *)device busLocation:(uint32_t)busLocation NS_DESIGNATED_INITIALIZER;
 
 @end

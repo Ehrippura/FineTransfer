@@ -20,6 +20,8 @@ NS_SWIFT_NAME(DeviceManager)
 
 - (nullable NSArray<EWFTDevice *> *)detectDevicesWithError:(NSError **)error;
 
+- (void)startMonitoringWithChangeHandler:(void (^)(void))changeHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END

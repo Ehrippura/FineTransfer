@@ -30,10 +30,11 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
 
 @implementation EWFTDevice
 
-- (instancetype)initWithDevice:(LIBMTP_mtpdevice_t *)device {
+- (instancetype)initWithDevice:(LIBMTP_mtpdevice_t *)device busLocation:(uint32_t)busLocation {
     self = [super init];
     if (self) {
         _mtp_device_handle = device;
+        _busLocation = busLocation;
         _mtpQueue = dispatch_queue_create("tw.eternalwind.device.mtp", DISPATCH_QUEUE_SERIAL);
 
         NSMutableArray<EWFTStorage *> *result = [NSMutableArray array];
@@ -92,10 +93,6 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
     NSString *result = serialNumber ? [NSString stringWithUTF8String:serialNumber] : nil;
     free(serialNumber);
     return result;
-}
-
-- (uint32_t)rootStorageID {
-    return _mtp_device_handle->storage->id;
 }
 
 - (void)contentsOfFolderWithID:(uint32_t)folderID

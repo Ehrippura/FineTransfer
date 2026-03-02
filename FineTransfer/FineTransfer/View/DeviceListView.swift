@@ -11,16 +11,13 @@ struct DeviceListView: View {
 
     @Environment(MainModel.self) var viewModel
 
-    @State var selection: String? = nil
-
     var body: some View {
-        List(viewModel.devices, id: \.modelName, selection: $selection) { device in
+
+        @Bindable var model = viewModel
+
+        List(viewModel.devices, id: \.modelName, selection: $model.selectedDevice) { device in
             DeviceListRow(device: device)
-        }
-        .onChange(of: selection) { old, new in
-            if let new {
-                viewModel.selectDevice(new)
-            }
+                .id(device)
         }
         .overlay {
             if viewModel.devices.isEmpty {

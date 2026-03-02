@@ -22,7 +22,7 @@ NS_SWIFT_NAME(MTPDevice)
 @property (nonatomic, copy, readonly, nullable) NSString *modelName;
 @property (nonatomic, copy, readonly, nullable) NSString *serialNumber;
 
-@property (nonatomic, readonly) uint32_t rootStorageID;
+@property (nonatomic, readonly) uint32_t busLocation;
 
 /** All storages available on the device, in the order reported by the device. */
 @property (nonatomic, copy, readonly) NSArray<EWFTStorage *> *storages;

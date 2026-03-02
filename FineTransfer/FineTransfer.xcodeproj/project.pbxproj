@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		C76CF06A2F52F6AF007B56C5 /* MTP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C76CF0692F52F675007B56C5 /* MTP.framework */; };
 		C76CF06B2F52F6AF007B56C5 /* MTP.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C76CF0692F52F675007B56C5 /* MTP.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C7AD9E312F5512B700FAFEE0 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C7AD9E302F5512B700FAFEE0 /* IOKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -46,6 +47,7 @@
 		C76CF04C2F52F5AC007B56C5 /* FineTransfer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FineTransfer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C76CF05C2F52F675007B56C5 /* MTP.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MTP.xcodeproj; path = ../MTP/MTP.xcodeproj; sourceTree = SOURCE_ROOT; };
 		C76CF0722F52F735007B56C5 /* FineTransferTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FineTransferTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7AD9E302F5512B700FAFEE0 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -67,6 +69,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C76CF06A2F52F6AF007B56C5 /* MTP.framework in Frameworks */,
+				C7AD9E312F5512B700FAFEE0 /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -102,6 +105,7 @@
 		C76CF05B2F52F669007B56C5 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C7AD9E302F5512B700FAFEE0 /* IOKit.framework */,
 				C76CF05C2F52F675007B56C5 /* MTP.xcodeproj */,
 			);
 			name = Frameworks;

@@ -16,13 +16,20 @@ class MainModel {
     var selectedDevice: MTPDevice?
 
     init() {
-
+        DeviceManager.shared.startMonitoring {
+            self.detectDevices()
+        }
     }
 
     func detectDevices() {
         Task.detached {
             do {
                 let devices = try DeviceManager.shared.detectDevices()
+                if let selectedDevice = await self.selectedDevice {
+                    if !devices.map(\.busLocation).contains(selectedDevice.busLocation) {
+                        await self.setSelectedDevice(nil)
+                    }
+                }
                 await self.setDevices(devices)
             } catch {
                 print(error)
@@ -34,7 +41,11 @@ class MainModel {
         self.devices = devices
     }
 
-    func selectDevice(_ id: String) {
-        selectedDevice = devices.first(where: { $0.modelName == id })
+    func setSelectedDevice(_ device: MTPDevice?) {
+        guard let device else {
+            self.selectedDevice = nil
+            return
+        }
+        self.selectedDevice = devices.first(where: { $0.busLocation == device.busLocation })
     }
 }
