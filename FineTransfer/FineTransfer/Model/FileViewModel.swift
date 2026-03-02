@@ -243,6 +243,9 @@ class FileViewModel {
                     break
                 }
             }
+            let deletedIDs = Set(filesToDelete.map(\.itemID))
+            backStack.removeAll { deletedIDs.contains($0.id) }
+            forwardStack.removeAll { deletedIDs.contains($0.id) }
             loadFiles()
         }
     }
