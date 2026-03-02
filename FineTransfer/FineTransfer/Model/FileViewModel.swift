@@ -103,6 +103,7 @@ class FileViewModel {
             return
         }
 
+        let storageID = currentStorage?.storageID ?? 0
         defer {
             downloadState = nil
         }
@@ -114,13 +115,81 @@ class FileViewModel {
             let destination = entry.destination
             let filename = file.filename ?? "Unknown"
 
-            let isDirectory = (try? destination.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
-            let destinationURL = isDirectory ? destination.appendingPathComponent(filename) : destination
-            let folderName = isDirectory ? destination.lastPathComponent : destination.deletingLastPathComponent().lastPathComponent
+            if file.isFolder {
+                do {
+                    try await downloadFolderItem(
+                        file, to: destination, storageID: storageID,
+                        sessionID: sessionID, batchIndex: index, batchTotal: filesToDownload.count
+                    )
+                } catch {
+                    NSAlert(error: error).runModal()
+                    throw error
+                }
+            } else {
+                let isDirectory = (try? destination.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+                let destinationURL = isDirectory ? destination.appendingPathComponent(filename) : destination
+                let folderName = isDirectory ? destination.lastPathComponent : destination.deletingLastPathComponent().lastPathComponent
 
-            do {
+                do {
+                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                        let progress = device.downloadFile(id: file.itemID, to: destinationURL) { error in
+                            if let error {
+                                continuation.resume(throwing: error)
+                            } else {
+                                continuation.resume()
+                            }
+                        }
+                        downloadState = TransferState(
+                            id: sessionID,
+                            filename: filename,
+                            isFolder: file.isFolder,
+                            destinationFolderName: folderName,
+                            progress: progress,
+                            currentIndex: index,
+                            totalCount: filesToDownload.count
+                        )
+                    }
+
+                    // delays 0.2 seconds before sheet dismiss
+                    try? await Task.sleep(for: .seconds(0.2))
+
+                } catch {
+                    NSAlert(error: error).runModal()
+                    throw error
+                }
+            }
+        }
+    }
+
+    private func downloadFolderItem(
+        _ item: MTPFileItem,
+        to destinationParent: URL,
+        storageID: UInt32,
+        sessionID: UUID,
+        batchIndex: Int,
+        batchTotal: Int
+    ) async throws {
+        guard let device else {
+            return
+        }
+
+        let folderName = item.filename ?? "Folder"
+        let localFolder = destinationParent.appendingPathComponent(folderName)
+        try FileManager.default.createDirectory(at: localFolder, withIntermediateDirectories: true)
+
+        let contents = try await device.contents(folderID: item.itemID, storageID: storageID)
+
+        for child in contents {
+            if child.isFolder {
+                try await downloadFolderItem(
+                    child, to: localFolder, storageID: storageID,
+                    sessionID: sessionID, batchIndex: batchIndex, batchTotal: batchTotal
+                )
+            } else {
+                let filename = child.filename ?? "file"
+                let destFile = localFolder.appendingPathComponent(filename)
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                    let progress = device.downloadFile(id: file.itemID, to: destinationURL) { error in
+                    let progress = device.downloadFile(id: child.itemID, to: destFile) { error in
                         if let error {
                             continuation.resume(throwing: error)
                         } else {
@@ -130,20 +199,13 @@ class FileViewModel {
                     downloadState = TransferState(
                         id: sessionID,
                         filename: filename,
-                        isFolder: file.isFolder,
+                        isFolder: false,
                         destinationFolderName: folderName,
                         progress: progress,
-                        currentIndex: index,
-                        totalCount: filesToDownload.count
+                        currentIndex: batchIndex,
+                        totalCount: batchTotal
                     )
                 }
-
-                // delays 0.2 seconds before sheet dismiss
-                try? await Task.sleep(for: .seconds(0.2))
-
-            } catch {
-                NSAlert(error: error).runModal()
-                throw error
             }
         }
     }

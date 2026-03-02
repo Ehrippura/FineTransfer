@@ -19,7 +19,6 @@ The project uses a two-layer approach:
 **Language boundary:**
 - `libmtp` C API → called from ObjC (`EWFTDeviceManager.m`) via `#import <MTP/MTP.h>`
 - ObjC → Swift via `FineTransfer-Bridging-Header.h` (imports `EWFTDeviceManager.h`)
-- `EWFTDeviceManager` is renamed `DeviceManager` in Swift via `NS_SWIFT_NAME`
 
 **Debug behavior:** In DEBUG builds, `EWFTDeviceManager` enables `LIBMTP_DEBUG_PTP` logging.
 
