@@ -17,6 +17,7 @@
 @property (nonatomic, assign) IONotificationPortRef notificationPort;
 @property (nonatomic, assign) io_iterator_t addedIterator;
 @property (nonatomic, assign) io_iterator_t removedIterator;
+@property (nonatomic, strong) NSMutableDictionary<NSNumber *, EWFTDevice *> *openDevices;
 @end
 
 static void deviceAdded(void *refCon, io_iterator_t iterator) {
@@ -61,6 +62,7 @@ static void deviceRemoved(void *refCon, io_iterator_t iterator) {
     self = [super init];
     if (self) {
         LIBMTP_Init();
+        _openDevices = [NSMutableDictionary dictionary];
     }
     return self;
 }
@@ -72,6 +74,7 @@ static void deviceRemoved(void *refCon, io_iterator_t iterator) {
     LIBMTP_error_number_t err = LIBMTP_Detect_Raw_Devices(&deviceRaw, &deviceCount);
 
     if (err == LIBMTP_ERROR_NO_DEVICE_ATTACHED) {
+        [self.openDevices removeAllObjects];
         return @[];
     }
 
@@ -84,18 +87,33 @@ static void deviceRemoved(void *refCon, io_iterator_t iterator) {
         return nil;
     }
 
+    NSMutableSet<NSNumber *> *detectedLocations = [NSMutableSet set];
     NSMutableArray<EWFTDevice *> *devices = [NSMutableArray arrayWithCapacity:deviceCount];
 
     for (int i = 0; i < deviceCount; i++) {
-        LIBMTP_raw_device_t *targetDeviceRaw = &deviceRaw[i];
-        LIBMTP_mtpdevice_t *device = LIBMTP_Open_Raw_Device_Uncached(targetDeviceRaw);
-        if (!device) {
+        LIBMTP_raw_device_t *raw = &deviceRaw[i];
+        NSNumber *key = @(raw->bus_location);
+        [detectedLocations addObject:key];
+
+        EWFTDevice *cached = self.openDevices[key];
+        if (cached) {
+            [devices addObject:cached];
             continue;
         }
 
-        EWFTDevice *d = [[EWFTDevice alloc] initWithDevice:device busLocation:targetDeviceRaw->bus_location];
+        LIBMTP_mtpdevice_t *handle = LIBMTP_Open_Raw_Device_Uncached(raw);
+        if (!handle) {
+            continue;
+        }
+
+        EWFTDevice *d = [[EWFTDevice alloc] initWithDevice:handle busLocation:raw->bus_location];
+        self.openDevices[key] = d;
         [devices addObject:d];
     }
+
+    NSMutableSet *staleKeys = [NSMutableSet setWithArray:self.openDevices.allKeys];
+    [staleKeys minusSet:detectedLocations];
+    [self.openDevices removeObjectsForKeys:staleKeys.allObjects];
 
     free(deviceRaw);
     return [devices copy];

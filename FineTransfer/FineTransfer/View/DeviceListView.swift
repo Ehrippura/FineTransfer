@@ -32,6 +32,15 @@ struct DeviceListView: View {
                 }
             }
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    viewModel.detectDevices()
+                } label: {
+                    Image(systemName: "arrow.trianglehead.clockwise")
+                }
+            }
+        }
     }
 }
 

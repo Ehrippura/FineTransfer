@@ -10,7 +10,7 @@ import SwiftUI
 
 struct DeviceListRow: View {
 
-    let device: MTPDevice
+    weak var device: MTPDevice?
 
     var body: some View {
         HStack {
@@ -18,12 +18,12 @@ struct DeviceListRow: View {
             Image(systemName: "externaldrive.connected.to.line.below")
 
             VStack(alignment: .leading) {
-                if let manufacturer = device.manufacturer {
+                if let manufacturer = device?.manufacturer {
                     Text(manufacturer)
                 }
-                if let displayName = device.displayName, !displayName.isEmpty {
+                if let displayName = device?.displayName, !displayName.isEmpty {
                     Text(displayName)
-                } else if let modelName = device.modelName {
+                } else if let modelName = device?.modelName {
                     Text(modelName.isEmpty ? "Unknown" : modelName)
                 }
             }
