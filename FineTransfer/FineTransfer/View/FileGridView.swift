@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 // MARK: - FileGridView (NSViewRepresentable)
 
@@ -14,7 +15,7 @@ struct FileGridView: NSViewRepresentable {
 
     var files: [MTPFileItem]
     fileprivate var onItemDoubleClick: ((MTPFileItem) -> Void)?
-    fileprivate var onDownload: (([MTPFileItem]) -> Void)?
+    fileprivate var onDownload: (([MTPFileItem], URL?, (((any Error)?) -> Void)?) -> Void)?
     fileprivate var onDelete: (([MTPFileItem]) -> Void)?
     fileprivate var onUpload: (() -> Void)?
     fileprivate var onDropUpload: (([URL]) -> Void)?
@@ -49,6 +50,7 @@ struct FileGridView: NSViewRepresentable {
         )
 
         collectionView.registerForDraggedTypes([.fileURL])
+        collectionView.setDraggingSourceOperationMask([.copy], forLocal: false)
         collectionView.dataSource = context.coordinator
         collectionView.delegate = context.coordinator
         collectionView.coordinator = context.coordinator
@@ -93,7 +95,7 @@ extension FileGridView {
         return copy
     }
 
-    func onDownload(perform action: @escaping ([MTPFileItem]) -> Void) -> FileGridView {
+    func onDownload(perform action: @escaping ([MTPFileItem], URL?, (((any Error)?) -> Void)?) -> Void) -> FileGridView {
         var copy = self
         copy.onDownload = action
         return copy
@@ -122,17 +124,25 @@ extension FileGridView {
 
 extension FileGridView {
 
-    class Coordinator: NSObject, NSCollectionViewDataSource, NSCollectionViewDelegateFlowLayout {
+    @MainActor
+    class Coordinator: NSObject, NSCollectionViewDataSource, NSCollectionViewDelegateFlowLayout, NSFilePromiseProviderDelegate {
 
         var files: [MTPFileItem]
         var onItemDoubleClick: ((MTPFileItem) -> Void)?
-        var onDownload: (([MTPFileItem]) -> Void)?
+        var onDownload: (([MTPFileItem], URL?, (((any Error)?) -> Void)?) -> Void)?
         var onDelete: (([MTPFileItem]) -> Void)?
         var onUpload: (() -> Void)?
         var onDropUpload: (([URL]) -> Void)?
         fileprivate weak var collectionView: FileCollectionView?
 
-        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?, onDelete: (([MTPFileItem]) -> Void)?, onUpload: (() -> Void)?, onDropUpload: (([URL]) -> Void)?) {
+        init(
+            files: [MTPFileItem],
+            onItemDoubleClick: ((MTPFileItem) -> Void)?,
+            onDownload: (([MTPFileItem], URL?, (((any Error)?) -> Void)?) -> Void)?,
+            onDelete: (([MTPFileItem]) -> Void)?,
+            onUpload: (() -> Void)?,
+            onDropUpload: (([URL]) -> Void)?
+        ) {
             self.files = files
             self.onItemDoubleClick = onItemDoubleClick
             self.onDownload = onDownload
@@ -203,7 +213,7 @@ extension FileGridView {
         }
 
         @objc private func downloadMenuItemClicked() {
-            onDownload?(menuTargetFiles)
+            onDownload?(menuTargetFiles, nil, nil)
         }
 
         @objc private func deleteMenuItemClicked() {
@@ -242,6 +252,42 @@ extension FileGridView {
             }
             let file = files[indexPath.item]
             onItemDoubleClick?(file)
+        }
+
+        // MARK: Drag Source
+
+        func collectionView(
+            _ collectionView: NSCollectionView,
+            pasteboardWriterForItemAt indexPath: IndexPath
+        ) -> NSPasteboardWriting? {
+            guard indexPath.item < files.count else {
+                return nil
+            }
+            let file = files[indexPath.item]
+            guard !file.isFolder else {
+                return nil
+            }
+            return MTPFilePromiseProvider(fileItem: file, delegate: self)
+        }
+
+        // MARK: NSFilePromiseProviderDelegate
+
+        func filePromiseProvider(
+            _ filePromiseProvider: NSFilePromiseProvider,
+            fileNameForType fileType: String
+        ) -> String {
+            (filePromiseProvider as? MTPFilePromiseProvider)?.fileItem.filename ?? "file"
+        }
+
+        func filePromiseProvider(_ filePromiseProvider: NSFilePromiseProvider, writePromiseTo url: URL, completionHandler: @escaping ((any Error)?) -> Void) {
+
+            guard let provider = filePromiseProvider as? MTPFilePromiseProvider else {
+                return
+            }
+
+            onDownload?([provider.fileItem], url) { error in
+                completionHandler(error)
+            }
         }
     }
 }
@@ -360,6 +406,21 @@ fileprivate class FileCollectionViewItem: NSCollectionViewItem {
     func configure(with file: MTPFileItem) {
         nameLabel.stringValue = file.filename ?? "Unknown"
         iconView.image = NSWorkspace.shared.icon(forFilename: file.filename ?? "", isFolder: file.isFolder)
+    }
+}
+
+// MARK: - MTPFilePromiseProvider
+
+private final class MTPFilePromiseProvider: NSFilePromiseProvider, @unchecked Sendable {
+
+    var fileItem: MTPFileItem!
+
+    convenience init(fileItem: MTPFileItem, delegate: NSFilePromiseProviderDelegate) {
+        let ext = ((fileItem.filename ?? "") as NSString).pathExtension
+        let fileType = (!ext.isEmpty ? UTType(filenameExtension: ext)?.identifier : nil)
+                       ?? UTType.data.identifier
+        self.init(fileType: fileType, delegate: delegate)
+        self.fileItem = fileItem
     }
 }
 

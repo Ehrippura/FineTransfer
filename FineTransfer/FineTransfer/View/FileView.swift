@@ -24,8 +24,20 @@ struct FileView: View {
                     viewModel.navigateToFolder(item)
                 }
             }
-            .onDownload { filesToDownload in
-                viewModel.downloadFiles(filesToDownload)
+            .onDownload { filesToDownload, destination, handler in
+                if let destination {
+                    let pairs = filesToDownload.map { (file: $0, destination: destination) }
+                    Task {
+                        do {
+                            try await viewModel.downloadFiles(pairs)
+                            handler?(nil)
+                        } catch {
+                            handler?(error)
+                        }
+                    }
+                } else {
+                    viewModel.downloadFiles(filesToDownload)
+                }
             }
             .onUpload {
                 viewModel.uploadFiles()

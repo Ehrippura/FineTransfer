@@ -78,11 +78,7 @@ class FileViewModel {
         }
     }
 
-    func downloadFiles(_ filesToDownload: [MTPFileItem]) {
-
-        guard let device else {
-            return
-        }
+    func downloadFiles(_ fileToDownload: [MTPFileItem]) {
 
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
@@ -94,44 +90,61 @@ class FileViewModel {
             return
         }
 
-        let folderName = destinationFolder.lastPathComponent
+        let pairs = fileToDownload.map { (file: $0, destination: destinationFolder) }
+
+        Task {
+            try? await downloadFiles(pairs)
+        }
+    }
+
+    func downloadFiles(_ filesToDownload: [(file: MTPFileItem, destination: URL)]) async throws {
+
+        guard let device else {
+            return
+        }
+
+        defer {
+            downloadState = nil
+        }
 
         let sessionID = UUID()
 
-        Task {
-            for (index, file) in filesToDownload.enumerated() {
-                let filename = file.filename ?? "Unknown"
-                let destinationURL = destinationFolder.appendingPathComponent(filename)
+        for (index, entry) in filesToDownload.enumerated() {
+            let file = entry.file
+            let destination = entry.destination
+            let filename = file.filename ?? "Unknown"
 
-                do {
-                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                        let progress = device.downloadFile(id: file.itemID, to: destinationURL) { error in
-                            if let error {
-                                continuation.resume(throwing: error)
-                            } else {
-                                continuation.resume()
-                            }
+            let isDirectory = (try? destination.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+            let destinationURL = isDirectory ? destination.appendingPathComponent(filename) : destination
+            let folderName = isDirectory ? destination.lastPathComponent : destination.deletingLastPathComponent().lastPathComponent
+
+            do {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    let progress = device.downloadFile(id: file.itemID, to: destinationURL) { error in
+                        if let error {
+                            continuation.resume(throwing: error)
+                        } else {
+                            continuation.resume()
                         }
-                        downloadState = TransferState(
-                            id: sessionID,
-                            filename: filename,
-                            isFolder: file.isFolder,
-                            destinationFolderName: folderName,
-                            progress: progress,
-                            currentIndex: index,
-                            totalCount: filesToDownload.count
-                        )
                     }
-
-                    // delays 0.2 seconds before sheet dismiss
-                    try? await Task.sleep(for: .seconds(0.2))
-
-                } catch {
-                    NSAlert(error: error).runModal()
-                    break
+                    downloadState = TransferState(
+                        id: sessionID,
+                        filename: filename,
+                        isFolder: file.isFolder,
+                        destinationFolderName: folderName,
+                        progress: progress,
+                        currentIndex: index,
+                        totalCount: filesToDownload.count
+                    )
                 }
+
+                // delays 0.2 seconds before sheet dismiss
+                try? await Task.sleep(for: .seconds(0.2))
+
+            } catch {
+                NSAlert(error: error).runModal()
+                throw error
             }
-            downloadState = nil
         }
     }
 
@@ -185,6 +198,7 @@ class FileViewModel {
     }
 
     func uploadFiles(urls: [URL]) {
+
         guard let device, let currentStorage else {
             return
         }

@@ -62,6 +62,7 @@ struct TransferProgressView: View {
                 .foregroundStyle(.secondary)
             }
         }
+        .padding(.horizontal)
         .frame(minWidth: 220)
         .id(state.map { ObjectIdentifier($0.progress) })
         .onReceive(fractionPublisher) {

@@ -8,6 +8,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 NS_SWIFT_NAME(MTPFileItem)
+NS_SWIFT_SENDABLE
 @interface EWFTFileItem : NSObject
 
 @property (nonatomic, readonly) uint32_t itemID;
