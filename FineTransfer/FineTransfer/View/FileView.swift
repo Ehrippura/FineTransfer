@@ -55,8 +55,8 @@ struct FileView: View {
             .onChange(of: device) {
                 viewModel.setDevice(device)
             }
-            .sheet(item: $viewModel.downloadState) { _ in
-                TransferProgressView(state: $viewModel.downloadState)
+            .sheet(item: $viewModel.transferState) { _ in
+                TransferProgressView(state: $viewModel.transferState)
                     .interactiveDismissDisabled(true)
             }
             .toolbar {

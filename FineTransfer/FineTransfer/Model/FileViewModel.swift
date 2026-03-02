@@ -14,7 +14,7 @@ class FileViewModel {
     var files: [MTPFileItem] = []
     var isLoading = false
     var currentStorage: MTPStorage?
-    var downloadState: TransferState?
+    var transferState: TransferState?
 
     var backStack: [(id: UInt32, name: String)] = []
     var forwardStack: [(id: UInt32, name: String)] = []
@@ -105,7 +105,7 @@ class FileViewModel {
 
         let storageID = currentStorage?.storageID ?? 0
         defer {
-            downloadState = nil
+            transferState = nil
         }
 
         let sessionID = UUID()
@@ -141,7 +141,7 @@ class FileViewModel {
                                 continuation.resume()
                             }
                         }
-                        downloadState = TransferState(
+                        transferState = TransferState(
                             id: sessionID,
                             filename: filename,
                             isFolder: file.isFolder,
@@ -198,7 +198,7 @@ class FileViewModel {
                             continuation.resume()
                         }
                     }
-                    downloadState = TransferState(
+                    transferState = TransferState(
                         id: sessionID,
                         filename: filename,
                         isFolder: false,
@@ -283,7 +283,7 @@ class FileViewModel {
                                 continuation.resume()
                             }
                         }
-                        downloadState = TransferState(
+                        transferState = TransferState(
                             id: sessionID,
                             filename: filename,
                             isFolder: false,
@@ -302,7 +302,7 @@ class FileViewModel {
                     break
                 }
             }
-            downloadState = nil
+            transferState = nil
             loadFiles()
         }
     }
