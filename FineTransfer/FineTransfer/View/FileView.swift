@@ -30,6 +30,9 @@ struct FileView: View {
             .onUpload {
                 viewModel.uploadFiles()
             }
+            .onDropUpload { urls in
+                viewModel.uploadFiles(urls: urls)
+            }
             .onDelete { filesToDelete in
                 viewModel.deleteFiles(filesToDelete)
             }

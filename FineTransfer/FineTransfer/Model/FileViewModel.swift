@@ -171,11 +171,6 @@ class FileViewModel {
     }
 
     func uploadFiles() {
-
-        guard let device, let currentStorage else {
-            return
-        }
-
         let panel = NSOpenPanel()
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
@@ -186,12 +181,19 @@ class FileViewModel {
             return
         }
 
-        let filesToUpload = panel.urls
+        uploadFiles(urls: panel.urls)
+    }
+
+    func uploadFiles(urls: [URL]) {
+        guard let device, let currentStorage else {
+            return
+        }
+
         let destinationName = currentFolderName.isEmpty ? (device.displayName ?? "Device") : currentFolderName
         let sessionID = UUID()
 
         Task {
-            for (index, url) in filesToUpload.enumerated() {
+            for (index, url) in urls.enumerated() {
                 let filename = url.lastPathComponent
 
                 do {
@@ -210,7 +212,7 @@ class FileViewModel {
                             destinationFolderName: destinationName,
                             progress: progress,
                             currentIndex: index,
-                            totalCount: filesToUpload.count
+                            totalCount: urls.count
                         )
                     }
 

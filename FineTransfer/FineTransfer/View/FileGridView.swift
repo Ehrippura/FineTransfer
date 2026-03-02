@@ -17,6 +17,7 @@ struct FileGridView: NSViewRepresentable {
     fileprivate var onDownload: (([MTPFileItem]) -> Void)?
     fileprivate var onDelete: (([MTPFileItem]) -> Void)?
     fileprivate var onUpload: (() -> Void)?
+    fileprivate var onDropUpload: (([URL]) -> Void)?
 
     init(files: [MTPFileItem]) {
         self.files = files.sorted { lhs, rhs in
@@ -28,7 +29,7 @@ struct FileGridView: NSViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onDelete: onDelete, onUpload: onUpload)
+        Coordinator(files: files, onItemDoubleClick: onItemDoubleClick, onDownload: onDownload, onDelete: onDelete, onUpload: onUpload, onDropUpload: onDropUpload)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
@@ -47,6 +48,7 @@ struct FileGridView: NSViewRepresentable {
             forItemWithIdentifier: FileCollectionViewItem.identifier
         )
 
+        collectionView.registerForDraggedTypes([.fileURL])
         collectionView.dataSource = context.coordinator
         collectionView.delegate = context.coordinator
         collectionView.coordinator = context.coordinator
@@ -74,6 +76,7 @@ struct FileGridView: NSViewRepresentable {
         context.coordinator.onDownload = onDownload
         context.coordinator.onDelete = onDelete
         context.coordinator.onUpload = onUpload
+        context.coordinator.onDropUpload = onDropUpload
         if let collectionView = scrollView.documentView as? NSCollectionView {
             collectionView.reloadData()
         }
@@ -107,6 +110,12 @@ extension FileGridView {
         copy.onUpload = action
         return copy
     }
+
+    func onDropUpload(perform action: @escaping ([URL]) -> Void) -> FileGridView {
+        var copy = self
+        copy.onDropUpload = action
+        return copy
+    }
 }
 
 // MARK: - Coordinator
@@ -120,14 +129,16 @@ extension FileGridView {
         var onDownload: (([MTPFileItem]) -> Void)?
         var onDelete: (([MTPFileItem]) -> Void)?
         var onUpload: (() -> Void)?
+        var onDropUpload: (([URL]) -> Void)?
         fileprivate weak var collectionView: FileCollectionView?
 
-        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?, onDelete: (([MTPFileItem]) -> Void)?, onUpload: (() -> Void)?) {
+        init(files: [MTPFileItem], onItemDoubleClick: ((MTPFileItem) -> Void)?, onDownload: (([MTPFileItem]) -> Void)?, onDelete: (([MTPFileItem]) -> Void)?, onUpload: (() -> Void)?, onDropUpload: (([URL]) -> Void)?) {
             self.files = files
             self.onItemDoubleClick = onItemDoubleClick
             self.onDownload = onDownload
             self.onDelete = onDelete
             self.onUpload = onUpload
+            self.onDropUpload = onDropUpload
         }
 
         // MARK: NSCollectionViewDataSource
@@ -253,6 +264,48 @@ private class FileCollectionView: NSCollectionView {
         }
 
         return coordinator?.buildContextMenu()
+    }
+
+    // MARK: - Drag Destination
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard sender.draggingPasteboard.canReadObject(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) else {
+            return []
+        }
+        showDropHighlight(true)
+        return .copy
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        .copy
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        showDropHighlight(false)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        showDropHighlight(false)
+        let urls = sender.draggingPasteboard.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true]
+        ) as? [URL] ?? []
+        guard !urls.isEmpty else {
+            return false
+        }
+        coordinator?.onDropUpload?(urls)
+        return true
+    }
+
+    override func concludeDragOperation(_ sender: NSDraggingInfo?) {
+        showDropHighlight(false)
+    }
+
+    private func showDropHighlight(_ on: Bool) {
+        wantsLayer = true
+        layer?.borderColor = on ? NSColor.controlAccentColor.cgColor : NSColor.clear.cgColor
+        layer?.borderWidth = on ? 2 : 0
+        layer?.cornerRadius = on ? 6 : 0
     }
 }
 
