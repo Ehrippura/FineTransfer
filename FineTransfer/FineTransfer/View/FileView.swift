@@ -97,7 +97,7 @@ struct FileView: View {
                                         return
                                     }
                                     viewModel.currentStorage = newStorage
-                                    viewModel.loadFiles()
+                                    viewModel.loadFiles(resetNavigation: true)
                                 }
                             )
                         ) {

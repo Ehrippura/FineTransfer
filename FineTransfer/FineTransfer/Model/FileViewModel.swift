@@ -59,10 +59,14 @@ class FileViewModel {
         loadFiles()
     }
 
-    func loadFiles() {
+    func loadFiles(resetNavigation: Bool = false) {
         guard let device, let currentStorage else {
             files = []
             return
+        }
+
+        if resetNavigation {
+            self.resetNavigation()
         }
 
         Task {
