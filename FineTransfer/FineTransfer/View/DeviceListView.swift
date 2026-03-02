@@ -28,6 +28,8 @@ struct DeviceListView: View {
                     Image(systemName: "cable.connector.slash")
                         .font(.system(size: 32))
                         .foregroundStyle(Color.red)
+                        .symbolRenderingMode(.hierarchical)
+                        .symbolEffect(.bounce.up.byLayer, options: .nonRepeating)
                     Text("No devices connected")
                         .foregroundStyle(Color.secondary)
                 }
