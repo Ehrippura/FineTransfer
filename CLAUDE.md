@@ -60,5 +60,5 @@ Open in Xcode. Build order matters — `MTP.xcodeproj` is referenced as a subpro
 
 ```bash
 # Build from command line (macOS target, Apple Silicon)
-xcodebuild -project FineTransfer/FineTransfer.xcodeproj -scheme FineTransfer -arch arm64 build
+xcodebuild -project app/FineTransfer.xcodeproj -scheme FineTransfer -arch arm64 build
 ```

@@ -19,12 +19,12 @@ A macOS app for transferring files to/from MTP (Media Transfer Protocol) devices
 
 ## Building
 
-Open `FineTransfer/FineTransfer.xcodeproj` in Xcode and build. The `MTP.xcodeproj` is referenced as a subproject and will build automatically.
+Open `app/FineTransfer.xcodeproj` in Xcode and build. The `MTP.xcodeproj` is referenced as a subproject and will build automatically.
 
 Or use xcodebuild from the command line:
 
 ```bash
-xcodebuild -project FineTransfer/FineTransfer.xcodeproj -scheme FineTransfer -configuration Release
+xcodebuild -project app/FineTransfer.xcodeproj -scheme FineTransfer -configuration Release
 ```
 
 ## Dependencies
