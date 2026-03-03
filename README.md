@@ -6,6 +6,12 @@ A macOS app for transferring files to/from MTP (Media Transfer Protocol) devices
 
 ![FineTransfer Screenshot](blobs/screenshot.png)
 
+## Features
+
+- **Native macOS interface** — Built with SwiftUI, following macOS design conventions
+- **App Sandbox** — Only accesses files and paths explicitly chosen by the user, nothing else
+- **No network connections** — Fully offline; no data is ever transmitted, keeping your files private
+
 ## Requirements
 
 - macOS 26.0 or later
@@ -13,7 +19,9 @@ A macOS app for transferring files to/from MTP (Media Transfer Protocol) devices
 
 ## Building
 
-Open `FineTransfer/FineTransfer.xcodeproj` in Xcode. The `MTP.xcodeproj` is referenced as a subproject and will build automatically.
+Open `FineTransfer/FineTransfer.xcodeproj` in Xcode and build. The `MTP.xcodeproj` is referenced as a subproject and will build automatically.
+
+Or use xcodebuild from the command line:
 
 ```bash
 xcodebuild -project FineTransfer/FineTransfer.xcodeproj -scheme FineTransfer -configuration Release
