@@ -84,7 +84,7 @@ struct FileView: View {
                             .controlSize(.small)
                     }
                 }
-                .sharedBackgroundVisibility(.hidden)
+                .hideGlassBackground()
 
                 if let device, device.storages.count > 1 {
                     ToolbarItem(placement: .primaryAction) {

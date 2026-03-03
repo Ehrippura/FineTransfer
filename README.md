@@ -14,7 +14,7 @@ A macOS app for transferring files to/from MTP (Media Transfer Protocol) devices
 
 ## Requirements
 
-- macOS 26.0 or later
+- macOS 15.0 or later
 - Xcode 26 or later
 
 ## Building
