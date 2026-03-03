@@ -6,8 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **FineTransfer** is a macOS app for transferring files to/from MTP (Media Transfer Protocol) devices such as Android phones, cameras, and media players.
 
-**Platform**: Apple Silicon only (arm64 architecture)
-
 ## Architecture
 
 The project uses a two-layer approach:
@@ -56,9 +54,7 @@ someFunction {
 
 Open in Xcode. Build order matters — `MTP.xcodeproj` is referenced as a subproject of `FineTransfer.xcodeproj` and must build first.
 
-**Note**: This project only supports Apple Silicon (arm64). Intel Macs are not supported.
-
 ```bash
-# Build from command line (macOS target, Apple Silicon)
-xcodebuild -project app/FineTransfer.xcodeproj -scheme FineTransfer -arch arm64 build
+# Build from command line (macOS target)
+xcodebuild -project app/FineTransfer.xcodeproj -scheme FineTransfer build
 ```
