@@ -8,6 +8,12 @@
     "0 bytes" : {
       "comment" : "Zero byte count display",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0 バイト"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -19,6 +25,12 @@
     "An unexpected error occurred. Please try again." : {
       "comment" : "Unknown MTP error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予期しないエラーが発生しました。もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -30,6 +42,12 @@
     "Cancel" : {
       "comment" : "Cancel button",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "キャンセル"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -41,6 +59,12 @@
     "Choose Destination" : {
       "comment" : "Download destination folder picker button",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存先を選択"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -52,6 +76,12 @@
     "Couldn't connect to the device. Make sure it's unlocked and set to file transfer mode, then try again." : {
       "comment" : "Connecting error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスに接続できませんでした。デバイスのロックを解除してファイル転送モードに設定してから、もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -63,6 +93,12 @@
     "Couldn't create the folder. The device may be full or doesn't allow creating folders here." : {
       "comment" : "Create folder error fallback",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダを作成できませんでした。デバイスの容量が不足しているか、このフォルダの作成が許可されていない可能性があります。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -74,6 +110,12 @@
     "Couldn't delete this item. The file may be in use on the device — please try again." : {
       "comment" : "Delete error fallback",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この項目を削除できませんでした。ファイルがデバイスで使用中の可能性があります。もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -85,6 +127,12 @@
     "Couldn't detect connected devices. Please check the USB connection and try again." : {
       "comment" : "Device detection error fallback",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続されているデバイスを検出できませんでした。USB接続を確認してから、もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -96,6 +144,12 @@
     "Couldn't download the file. The device may be busy or disconnected — please try again." : {
       "comment" : "Download error fallback",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルをダウンロードできませんでした。デバイスがビジー状態か切断されている可能性があります。もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -107,6 +161,12 @@
     "Couldn't load the folder contents. The device may be busy — please try again." : {
       "comment" : "List folder error fallback",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダの内容を読み込めませんでした。デバイスがビジー状態の可能性があります。もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -118,6 +178,12 @@
     "Couldn't rename this item. The device may not support renaming, or the file may be in use." : {
       "comment" : "Rename error fallback",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この項目の名前を変更できませんでした。デバイスが名前の変更をサポートしていないか、ファイルが使用中の可能性があります。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -129,6 +195,12 @@
     "Couldn't upload the file. The device may be busy or out of space — please try again." : {
       "comment" : "Upload error fallback",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイルをアップロードできませんでした。デバイスがビジー状態か空き容量が不足している可能性があります。もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -140,6 +212,12 @@
     "Create" : {
       "comment" : "Create folder button",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作成"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -151,6 +229,12 @@
     "Delete" : {
       "comment" : "Context menu: delete selected items\nDelete confirmation button",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "削除"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -162,6 +246,12 @@
     "Delete \"%@\"?" : {
       "comment" : "Delete single item confirmation title",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「%@」を削除しますか？"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -173,6 +263,12 @@
     "Delete %d items?" : {
       "comment" : "Delete multiple items confirmation title",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d 個の項目を削除しますか？"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -184,6 +280,12 @@
     "Download" : {
       "comment" : "Context menu: download selected items",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロード"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -195,6 +297,12 @@
     "file" : {
       "comment" : "Generic file noun",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ファイル"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206,6 +314,12 @@
     "Fine Transfer" : {
       "comment" : "App window title",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FineTransfer"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -217,6 +331,12 @@
     "New Folder" : {
       "comment" : "Context menu: create a new folder on the device\nNew folder dialog title",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新規フォルダ"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -228,6 +348,12 @@
     "No device found. Please connect your device via USB and make sure it's set to file transfer mode." : {
       "comment" : "No device attached error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスが見つかりません。USBでデバイスを接続し、ファイル転送モードに設定されていることを確認してください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -239,6 +365,12 @@
     "No devices connected" : {
       "comment" : "Device list empty state",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "接続されているデバイスはありません"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -250,6 +382,12 @@
     "Please select a device." : {
       "comment" : "Main view placeholder when no device is selected",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスを選択してください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -261,6 +399,12 @@
     "Rename" : {
       "comment" : "Context menu: rename selected item\nRename confirmation button\nRename dialog title",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名前を変更"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -272,6 +416,12 @@
     "Root" : {
       "comment" : "Root folder navigation title",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ルート"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -283,6 +433,12 @@
     "Something went wrong while communicating with the device. Please try again." : {
       "comment" : "General MTP error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスとの通信中にエラーが発生しました。もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -294,6 +450,12 @@
     "Storage" : {
       "comment" : "Storage picker label",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ストレージ"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -305,6 +467,12 @@
     "Storage %u" : {
       "comment" : "Storage picker fallback label",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ストレージ %u"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -316,6 +484,12 @@
     "The app ran out of memory. Try closing other apps and try again." : {
       "comment" : "Memory allocation error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アプリのメモリが不足しました。他のアプリを閉じてから、もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -327,6 +501,12 @@
     "The device is no longer connected. Please reconnect it and try again." : {
       "comment" : "Device disconnected error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスが接続されていません。再接続してから、もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -338,6 +518,12 @@
     "The device responded with an unexpected error. Try disconnecting and reconnecting it." : {
       "comment" : "PTP layer error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスが予期しないエラーを返しました。デバイスを接続し直してみてください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -349,6 +535,12 @@
     "The device storage is full. Free up some space on the device and try again." : {
       "comment" : "Storage full error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "デバイスのストレージが満杯です。デバイスの空き容量を確保してから、もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -360,6 +552,12 @@
     "The operation was cancelled." : {
       "comment" : "Cancelled error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "操作がキャンセルされました。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -371,6 +569,12 @@
     "There was a problem with the USB connection. Make sure the cable is securely connected and try again." : {
       "comment" : "USB layer error",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USB接続に問題がありました。ケーブルがしっかり接続されていることを確認してから、もう一度お試しください。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -382,6 +586,12 @@
     "This action cannot be undone." : {
       "comment" : "Delete confirmation detail",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この操作は取り消せません。"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -393,6 +603,12 @@
     "Unknown" : {
       "comment" : "Unknown filename",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -404,6 +620,12 @@
     "untitled folder" : {
       "comment" : "Default new folder name",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "名称未設定フォルダ"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
@@ -415,6 +637,12 @@
     "Upload" : {
       "comment" : "Context menu: upload files to current folder\nUpload files picker button",
       "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "アップロード"
+          }
+        },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
