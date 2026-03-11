@@ -54,7 +54,9 @@ struct FileView: View {
             .onDelete { filesToDelete in
                 viewModel.deleteFiles(filesToDelete)
             }
-            .navigationTitle(viewModel.currentFolderName.isEmpty ? "Root" : viewModel.currentFolderName)
+            .navigationTitle(viewModel.currentFolderName.isEmpty
+                ? NSLocalizedString("Root", comment: "Root folder navigation title")
+                : viewModel.currentFolderName)
             .onAppear {
                 viewModel.setDevice(device)
             }
@@ -104,7 +106,7 @@ struct FileView: View {
                             ForEach(device.storages, id: \.storageID) { storage in
                                 HStack {
                                     Image(systemName: "externaldrive")
-                                    Text(storage.storageDescription ?? "Storage \(storage.storageID)")
+                                    Text(storage.storageDescription ?? String(format: NSLocalizedString("Storage %u", comment: "Storage picker fallback label"), storage.storageID))
                                 }
                                 .tag(Optional(storage))
                             }

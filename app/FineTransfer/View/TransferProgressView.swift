@@ -102,7 +102,9 @@ struct TransferProgressView: View {
     }
 
     private func formatBytes(_ bytes: Int64) -> String {
-        guard bytes > 0 else { return "0 bytes" }
+        guard bytes > 0 else {
+            return NSLocalizedString("0 bytes", comment: "Zero byte count display")
+        }
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         return formatter.string(fromByteCount: bytes)

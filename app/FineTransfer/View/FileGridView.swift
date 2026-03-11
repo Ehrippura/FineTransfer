@@ -335,7 +335,7 @@ extension FileGridView {
             _ filePromiseProvider: NSFilePromiseProvider,
             fileNameForType fileType: String
         ) -> String {
-            (filePromiseProvider as? MTPFilePromiseProvider)?.fileItem.filename ?? "file"
+            (filePromiseProvider as? MTPFilePromiseProvider)?.fileItem.filename ?? NSLocalizedString("file", comment: "Generic file noun")
         }
 
         func filePromiseProvider(_ filePromiseProvider: NSFilePromiseProvider, writePromiseTo url: URL, completionHandler: @escaping ((any Error)?) -> Void) {
@@ -463,7 +463,7 @@ fileprivate class FileCollectionViewItem: NSCollectionViewItem {
     }
 
     func configure(with file: MTPFileItem) {
-        nameLabel.stringValue = file.filename ?? "Unknown"
+        nameLabel.stringValue = file.filename ?? NSLocalizedString("Unknown", comment: "Unknown filename")
         iconView.image = NSWorkspace.shared.icon(forFilename: file.filename ?? "", isFolder: file.isFolder)
     }
 }
