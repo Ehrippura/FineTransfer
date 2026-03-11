@@ -7,6 +7,8 @@
 
 #import <Foundation/Foundation.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 extern NSErrorDomain const EWFTMTPErrorDomain;
 
 typedef NS_ERROR_ENUM(EWFTMTPErrorDomain, EWFTMTPError) {
@@ -20,3 +22,7 @@ typedef NS_ERROR_ENUM(EWFTMTPErrorDomain, EWFTMTPError) {
     EWFTMTPErrorConnecting         = 7,
     EWFTMTPErrorCancelled          = 8,
 };
+/// Returns a human-friendly localized description for the given error code.
+extern NSString * _Nullable EWFTLocalizedDescription(EWFTMTPError code);
+
+NS_ASSUME_NONNULL_END

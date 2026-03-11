@@ -102,7 +102,7 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         if (!self->_mtp_device_handle) {
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                  code:EWFTMTPErrorGeneral
-                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+                                             userInfo:@{NSLocalizedDescriptionKey: @"The device is no longer connected. Please reconnect it and try again."}];
             completionHandler(nil, error);
             return;
         }
@@ -114,11 +114,11 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         if (fileList == NULL) {
             LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
             if (errstack != NULL) {
-                NSString *msg = errstack->error_text
-                    ? [NSString stringWithUTF8String:errstack->error_text]
-                    : @"Failed to list folder contents.";
+                EWFTMTPError code = (EWFTMTPError)errstack->errornumber;
+                NSString *msg = EWFTLocalizedDescription(code)
+                    ?: @"Couldn't load the folder contents. The device may be busy — please try again.";
                 NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                                     code:errstack->errornumber
+                                                     code:code
                                                  userInfo:@{NSLocalizedDescriptionKey: msg}];
                 LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
                 completionHandler(nil, error);
@@ -151,7 +151,7 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         if (!self->_mtp_device_handle) {
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                  code:EWFTMTPErrorGeneral
-                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+                                             userInfo:@{NSLocalizedDescriptionKey: @"The device is no longer connected. Please reconnect it and try again."}];
             completionHandler(error);
             return;
         }
@@ -169,15 +169,15 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
             if (progress.isCancelled) {
                 completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                       code:EWFTMTPErrorCancelled
-                                                  userInfo:@{NSLocalizedDescriptionKey: @"Download was cancelled."}];
+                                                  userInfo:@{NSLocalizedDescriptionKey: EWFTLocalizedDescription(EWFTMTPErrorCancelled)}];
                 [[NSFileManager defaultManager] removeItemAtURL:destinationURL error:nil];
             } else {
                 LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
-                NSString *msg = (errstack && errstack->error_text)
-                    ? [NSString stringWithUTF8String:errstack->error_text]
-                    : @"Failed to download file.";
+                EWFTMTPError code = errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral;
+                NSString *msg = EWFTLocalizedDescription(code)
+                    ?: @"Couldn't download the file. The device may be busy or disconnected — please try again.";
                 completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                                      code:errstack->errornumber
+                                                      code:code
                                                   userInfo:@{NSLocalizedDescriptionKey: msg}];
                 LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
             }
@@ -199,7 +199,7 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         if (!self->_mtp_device_handle) {
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                  code:EWFTMTPErrorGeneral
-                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+                                             userInfo:@{NSLocalizedDescriptionKey: @"The device is no longer connected. Please reconnect it and try again."}];
             completionHandler(error);
             return;
         }
@@ -233,14 +233,14 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
             if (progress.isCancelled) {
                 completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                       code:EWFTMTPErrorCancelled
-                                                  userInfo:@{NSLocalizedDescriptionKey: @"Upload was cancelled."}];
+                                                  userInfo:@{NSLocalizedDescriptionKey: EWFTLocalizedDescription(EWFTMTPErrorCancelled)}];
             } else {
                 LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
-                NSString *msg = (errstack && errstack->error_text)
-                    ? [NSString stringWithUTF8String:errstack->error_text]
-                    : @"Failed to upload file.";
+                EWFTMTPError code = errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral;
+                NSString *msg = EWFTLocalizedDescription(code)
+                    ?: @"Couldn't upload the file. The device may be busy or out of space — please try again.";
                 completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                                      code:errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral
+                                                      code:code
                                                   userInfo:@{NSLocalizedDescriptionKey: msg}];
                 LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
             }
@@ -258,7 +258,7 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         if (!self->_mtp_device_handle) {
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                  code:EWFTMTPErrorGeneral
-                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+                                             userInfo:@{NSLocalizedDescriptionKey: @"The device is no longer connected. Please reconnect it and try again."}];
             completionHandler(error);
             return;
         }
@@ -270,11 +270,11 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         NSError *completionError = nil;
         if (result != 0) {
             LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
-            NSString *msg = (errstack && errstack->error_text)
-                ? [NSString stringWithUTF8String:errstack->error_text]
-                : @"Failed to delete object.";
+            EWFTMTPError code = errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral;
+            NSString *msg = EWFTLocalizedDescription(code)
+                ?: @"Couldn't delete this item. The file may be in use on the device — please try again.";
             completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                                  code:errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral
+                                                  code:code
                                               userInfo:@{NSLocalizedDescriptionKey: msg}];
             LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
         }
@@ -290,7 +290,7 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         if (!self->_mtp_device_handle) {
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                  code:EWFTMTPErrorGeneral
-                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+                                             userInfo:@{NSLocalizedDescriptionKey: @"The device is no longer connected. Please reconnect it and try again."}];
             completionHandler(error);
             return;
         }
@@ -304,11 +304,11 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         NSError *completionError = nil;
         if (result != 0) {
             LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
-            NSString *msg = (errstack && errstack->error_text)
-                ? [NSString stringWithUTF8String:errstack->error_text]
-                : @"Failed to rename object.";
+            EWFTMTPError code = errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral;
+            NSString *msg = EWFTLocalizedDescription(code)
+                ?: @"Couldn't rename this item. The device may not support renaming, or the file may be in use.";
             completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                                  code:errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral
+                                                  code:code
                                               userInfo:@{NSLocalizedDescriptionKey: msg}];
             LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
         }
@@ -325,7 +325,7 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         if (!self->_mtp_device_handle) {
             NSError *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                                  code:EWFTMTPErrorGeneral
-                                             userInfo:@{NSLocalizedDescriptionKey: @"Device is not connected."}];
+                                             userInfo:@{NSLocalizedDescriptionKey: @"The device is no longer connected. Please reconnect it and try again."}];
             completionHandler(0, error);
             return;
         }
@@ -339,11 +339,11 @@ static int EWFTTransferProgressCallback(uint64_t sent, uint64_t total, void cons
         NSError *completionError = nil;
         if (newID == 0) {
             LIBMTP_error_t *errstack = LIBMTP_Get_Errorstack(self->_mtp_device_handle);
-            NSString *msg = (errstack && errstack->error_text)
-                ? [NSString stringWithUTF8String:errstack->error_text]
-                : @"Failed to create folder.";
+            EWFTMTPError code = errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral;
+            NSString *msg = EWFTLocalizedDescription(code)
+                ?: @"Couldn't create the folder. The device may be full or doesn't allow creating folders here.";
             completionError = [NSError errorWithDomain:EWFTMTPErrorDomain
-                                                  code:errstack ? (EWFTMTPError)errstack->errornumber : EWFTMTPErrorGeneral
+                                                  code:code
                                               userInfo:@{NSLocalizedDescriptionKey: msg}];
             LIBMTP_Clear_Errorstack(self->_mtp_device_handle);
         }

@@ -80,9 +80,11 @@ static void deviceRemoved(void *refCon, io_iterator_t iterator) {
 
     if (err != LIBMTP_ERROR_NONE) {
         if (error) {
+            NSString *msg = EWFTLocalizedDescription((EWFTMTPError)err)
+                ?: @"Couldn't detect connected devices. Please check the USB connection and try again.";
             *error = [NSError errorWithDomain:EWFTMTPErrorDomain
                                          code:(NSInteger)err
-                                     userInfo:@{NSLocalizedDescriptionKey: @"Failed to detect MTP devices."}];
+                                     userInfo:@{NSLocalizedDescriptionKey: msg}];
         }
         return nil;
     }
