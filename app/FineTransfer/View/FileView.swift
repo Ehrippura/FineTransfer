@@ -57,10 +57,7 @@ struct FileView: View {
             .navigationTitle(viewModel.currentFolderName.isEmpty
                 ? NSLocalizedString("Root", comment: "Root folder navigation title")
                 : viewModel.currentFolderName)
-            .onAppear {
-                viewModel.setDevice(device)
-            }
-            .onChange(of: device) {
+            .task(id: device) {
                 viewModel.setDevice(device)
             }
             .sheet(item: $viewModel.transferState) { _ in
@@ -69,15 +66,11 @@ struct FileView: View {
             }
             .toolbar {
                 ToolbarItemGroup(placement: .navigation) {
-                    Button(action: viewModel.goBack) {
-                        Image(systemName: "chevron.left")
-                    }
-                    .disabled(viewModel.backStack.isEmpty)
+                    Button("Back", systemImage: "chevron.left", action: viewModel.goBack)
+                        .disabled(viewModel.backStack.isEmpty)
 
-                    Button(action: viewModel.goForward) {
-                        Image(systemName: "chevron.right")
-                    }
-                    .disabled(viewModel.forwardStack.isEmpty)
+                    Button("Forward", systemImage: "chevron.right", action: viewModel.goForward)
+                        .disabled(viewModel.forwardStack.isEmpty)
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -90,19 +83,7 @@ struct FileView: View {
 
                 if let device, device.storages.count > 1 {
                     ToolbarItem(placement: .primaryAction) {
-                        Picker(
-                            "Storage",
-                            selection: Binding(
-                                get: { viewModel.currentStorage },
-                                set: { newStorage in
-                                    guard newStorage?.storageID != viewModel.currentStorage?.storageID else {
-                                        return
-                                    }
-                                    viewModel.currentStorage = newStorage
-                                    viewModel.loadFiles(resetNavigation: true)
-                                }
-                            )
-                        ) {
+                        Picker("Storage", selection: $viewModel.currentStorage) {
                             ForEach(device.storages, id: \.storageID) { storage in
                                 HStack {
                                     Image(systemName: "externaldrive")
@@ -113,13 +94,17 @@ struct FileView: View {
                         }
                         .pickerStyle(.menu)
                         .fixedSize()
+                        .onChange(of: viewModel.currentStorage) { oldValue, newValue in
+                            guard newValue?.storageID != oldValue?.storageID else {
+                                return
+                            }
+                            viewModel.loadFiles(resetNavigation: true)
+                        }
                     }
                 }
 
                 ToolbarItem(placement: .primaryAction) {
-                    Button(action: viewModel.uploadFiles) {
-                        Image(systemName: "square.and.arrow.up")
-                    }
+                    Button("Upload", systemImage: "square.and.arrow.up", action: viewModel.uploadFiles)
                 }
             }
             .ignoresSafeArea(edges: .all)

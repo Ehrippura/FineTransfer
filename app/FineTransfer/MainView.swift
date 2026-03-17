@@ -9,9 +9,9 @@ import SwiftUI
 
 struct MainView: View {
 
-    @State var columnVisible: NavigationSplitViewVisibility = .all
+    @State private var columnVisible: NavigationSplitViewVisibility = .all
 
-    var model: MainModel = .init()
+    @State private var model = MainModel()
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisible) {

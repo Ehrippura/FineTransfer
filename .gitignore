@@ -1,4 +1,7 @@
 /libmtp
 /build
 /.vscode
+
 .claude
+.agents
+skills-lock.json

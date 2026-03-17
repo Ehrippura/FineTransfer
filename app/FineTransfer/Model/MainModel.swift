@@ -16,8 +16,8 @@ class MainModel {
     var selectedDevice: MTPDevice?
 
     init() {
-        DeviceManager.shared.startMonitoring {
-            self.detectDevices()
+        DeviceManager.shared.startMonitoring { [weak self] in
+            self?.detectDevices()
         }
     }
 
@@ -32,7 +32,9 @@ class MainModel {
                 }
                 await self.setDevices(devices)
             } catch {
-                print(error)
+                await MainActor.run {
+                    NSAlert(error: error).runModal()
+                }
             }
         }
     }

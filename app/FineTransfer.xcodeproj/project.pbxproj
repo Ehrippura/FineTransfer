@@ -13,6 +13,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		C72266FA2F692BC20081203A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C76CF05C2F52F675007B56C5 /* MTP.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C76CF01A2F52F172007B56C5;
+			remoteInfo = MTP;
+		};
 		C76CF0682F52F675007B56C5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = C76CF05C2F52F675007B56C5 /* MTP.xcodeproj */;
@@ -134,6 +141,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				C72266FB2F692BC20081203A /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				C76CF04E2F52F5AC007B56C5 /* FineTransfer */,
@@ -260,6 +268,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		C72266FB2F692BC20081203A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MTP;
+			targetProxy = C72266FA2F692BC20081203A /* PBXContainerItemProxy */;
+		};
 		C76CF0772F52F735007B56C5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = C76CF04B2F52F5AC007B56C5 /* FineTransfer */;
