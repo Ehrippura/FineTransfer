@@ -42,4 +42,5 @@ struct DeviceListView: View {
 
 #Preview {
     DeviceListView()
+        .environment(MainModel())
 }

@@ -33,7 +33,7 @@ class MainModel {
                 await self.setDevices(devices)
             } catch {
                 await MainActor.run {
-                    NSAlert(error: error).runModal()
+                    _ = NSAlert(error: error).runModal()
                 }
             }
         }

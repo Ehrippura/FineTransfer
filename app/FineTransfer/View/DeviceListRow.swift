@@ -34,3 +34,7 @@ struct DeviceListRow: View {
         }
     }
 }
+
+#Preview {
+    DeviceListRow()
+}
