@@ -348,6 +348,20 @@ class FileViewModel {
         let sessionID = UUID()
 
         Task {
+            // Resolve conflicts before starting uploads
+            var conflictResolutions: [String: ConflictResolution] = [:]
+            for url in urls {
+                let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
+                guard !isDirectory else {
+                    continue
+                }
+                let filename = url.lastPathComponent
+                if conflictResolutions[filename] == nil,
+                   files.contains(where: { $0.filename == filename && !$0.isFolder }) {
+                    conflictResolutions[filename] = resolveConflict(for: filename)
+                }
+            }
+
             for (index, url) in urls.enumerated() {
                 let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
                 do {
@@ -363,6 +377,18 @@ class FileViewModel {
                         )
                     } else {
                         let filename = url.lastPathComponent
+
+                        if let resolution = conflictResolutions[filename] {
+                            switch resolution {
+                            case .skip:
+                                continue
+                            case .overwrite:
+                                if let existing = files.first(where: { $0.filename == filename && !$0.isFolder }) {
+                                    try await device.deleteObject(id: existing.itemID)
+                                }
+                            }
+                        }
+
                         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                             let progress = device.uploadFile(from: url, toFolderID: currentFolderID, storageID: currentStorage.storageID) { error in
                                 if let error {
@@ -393,6 +419,21 @@ class FileViewModel {
             transferState = nil
             loadFiles()
         }
+    }
+
+    private enum ConflictResolution {
+        case skip
+        case overwrite
+    }
+
+    private func resolveConflict(for filename: String) -> ConflictResolution {
+        let alert = NSAlert()
+        alert.messageText = String(format: NSLocalizedString("\"%@\" Already Exists", comment: "File conflict alert title"), filename)
+        alert.informativeText = NSLocalizedString("Do you want to skip this file, or replace it with the new one?", comment: "File conflict alert message")
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: NSLocalizedString("Replace", comment: "File conflict replace button"))
+        alert.addButton(withTitle: NSLocalizedString("Skip", comment: "File conflict skip button"))
+        return alert.runModal() == .alertFirstButtonReturn ? .overwrite : .skip
     }
 
     private func uploadFolderItem(
