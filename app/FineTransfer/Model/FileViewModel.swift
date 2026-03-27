@@ -348,7 +348,6 @@ class FileViewModel {
         let sessionID = UUID()
 
         Task {
-            // Resolve conflicts before starting uploads
             var conflictResolutions: [String: ConflictResolution] = [:]
             for url in urls {
                 let isDirectory = (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
@@ -357,8 +356,8 @@ class FileViewModel {
                 }
                 let filename = url.lastPathComponent
                 if conflictResolutions[filename] == nil,
-                   files.contains(where: { $0.filename == filename && !$0.isFolder }) {
-                    conflictResolutions[filename] = resolveConflict(for: filename)
+                   let existing = files.first(where: { $0.filename == filename && !$0.isFolder }) {
+                    conflictResolutions[filename] = resolveConflict(for: filename, existingItem: existing)
                 }
             }
 
@@ -382,10 +381,8 @@ class FileViewModel {
                             switch resolution {
                             case .skip:
                                 continue
-                            case .overwrite:
-                                if let existing = files.first(where: { $0.filename == filename && !$0.isFolder }) {
-                                    try await device.deleteObject(id: existing.itemID)
-                                }
+                            case .overwrite(let existing):
+                                try await device.deleteObject(id: existing.itemID)
                             }
                         }
 
@@ -423,17 +420,17 @@ class FileViewModel {
 
     private enum ConflictResolution {
         case skip
-        case overwrite
+        case overwrite(existingItem: MTPFileItem)
     }
 
-    private func resolveConflict(for filename: String) -> ConflictResolution {
+    private func resolveConflict(for filename: String, existingItem: MTPFileItem) -> ConflictResolution {
         let alert = NSAlert()
         alert.messageText = String(format: NSLocalizedString("\"%@\" Already Exists", comment: "File conflict alert title"), filename)
         alert.informativeText = NSLocalizedString("Do you want to skip this file, or replace it with the new one?", comment: "File conflict alert message")
         alert.alertStyle = .warning
         alert.addButton(withTitle: NSLocalizedString("Replace", comment: "File conflict replace button"))
         alert.addButton(withTitle: NSLocalizedString("Skip", comment: "File conflict skip button"))
-        return alert.runModal() == .alertFirstButtonReturn ? .overwrite : .skip
+        return alert.runModal() == .alertFirstButtonReturn ? .overwrite(existingItem: existingItem) : .skip
     }
 
     private func uploadFolderItem(
